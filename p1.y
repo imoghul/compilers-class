@@ -48,7 +48,7 @@ IRBuilder<> Builder(TheContext);
 
 %token IN FINAL
 %token ERROR
-%token NUMBER
+%token <imm> NUMBER
 %token ID 
 %token BINV INV PLUS MINUS XOR AND OR MUL DIV MOD
 %token COMMA ENDLINE ASSIGN LBRACKET RBRACKET LPAREN RPAREN NONE COLON
