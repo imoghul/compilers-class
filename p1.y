@@ -59,6 +59,8 @@ IRBuilder<> Builder(TheContext);
 %left PLUS MINUS OR
 %left MUL DIV AND XOR MOD
 
+%type <val> expr
+
 %start program
 
 %%
