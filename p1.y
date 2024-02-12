@@ -151,7 +151,9 @@ ensemble:  expr
 | ensemble COMMA expr COLON NUMBER   // 566 only
 ;
 
-expr:   ID
+expr:   ID{
+  $$ = params_list[$1];
+}
 | ID NUMBER
 | NUMBER{
   $$ = Builder.getInt32($1);
@@ -163,31 +165,33 @@ expr:   ID
   $$ = Builder.CreateSub($1,$3);
 }
 | expr XOR expr{
-  Builder.CreateXor($1,$3)
+  $$ = Builder.CreateXor($1,$3)
 }
 | expr AND expr{
-  Builder.CreateAnd($1,$3);
+  $$ = Builder.CreateAnd($1,$3);
 }
 | expr OR expr{
-  Builder.CreateOr($1,$3);
+  $$ = Builder.CreateOr($1,$3);
 }
 | INV expr{
-  Builder.CreateNot($2);
+  $$ = Builder.CreateNot($2);
 }
 | BINV expr{
-  // TODO
+  $$ = Builder.CreateNot(Builder.CreateAnd($2,1));
 }
-| expr MUL expr{
-  Builder.CreateMul($1,$3);
+| expr MUL expr{  
+  $$ = Builder.CreateMul($1,$3);
 }
 | expr DIV expr{
-  Builder.CreateUDiv($1,$3);
+  $$ = Builder.CreateUDiv($1,$3);
 }
 | expr MOD expr{
-  Builder.CreateSRem($1,$3);
+  $$ = Builder.CreateSRem($1,$3);
 }
 | ID LBRACKET ensemble RBRACKET
-| LPAREN ensemble RPAREN
+| LPAREN ensemble RPAREN{
+  $$ = $2;
+}
 /* 566 only */
 | LPAREN ensemble RPAREN LBRACKET ensemble RBRACKET
 | REDUCE AND LPAREN ensemble RPAREN
@@ -234,4 +238,3 @@ void yyerror(const char* msg)
 {
   printf("%s\n",msg);
 }
-

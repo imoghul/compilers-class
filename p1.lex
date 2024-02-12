@@ -34,7 +34,7 @@ using namespace llvm;
 [ \t]         //ignore
 
 in            { return IN; }
-final         { return final; }
+final         { return FINAL; }
 none          { return NONE;  }
 expand        { return EXPAND; }
 
@@ -75,4 +75,3 @@ int yywrap()
 {
   return 1;
 }
-
