@@ -264,8 +264,7 @@ expr:   ID{
   Value * val = Builder.getInt32(0);
   Value* mask = Builder.CreateOr($4,Builder.getInt32(0));
   for(int i = 0;i<32;++i){
-    val = Builder.CreateAdd(val,Builder.CreateAnd(mask,Builder.getInt32(1)));
-    mask = Builder.CreateLShr(mask,Builder.getInt32(1));
+    val = Builder.CreateAdd(val,Builder.CreateAnd(Builder.CreateLShr(mask,Builder.getInt32(i)),Builder.getInt32(1)));
   }
   $$ = val;
 }
