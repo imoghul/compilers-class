@@ -150,9 +150,7 @@ final: FINAL ensemble endline_opt
 endline_opt: %empty | ENDLINE;
             
 
-statements_opt: %empty{
-  $$ = Builder.getInt32(0);
-}
+statements_opt: %empty
             | statements;
 
 statements:   statement 
@@ -170,7 +168,11 @@ statement: ID ASSIGN ensemble ENDLINE{
 }
 ;
 
-ensemble:  expr{
+ensemble:  %empty{
+  $$ = Builder.getInt32(0);
+}
+|
+expr{
   $$ = $1;
 }
 | expr COLON NUMBER{
