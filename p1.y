@@ -60,6 +60,7 @@ IRBuilder<> Builder(TheContext);
 %left MUL DIV AND XOR MOD
 
 %type <val> expr
+%type <val> ensemble
 
 %start program
 
