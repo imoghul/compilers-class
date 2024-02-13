@@ -156,7 +156,9 @@ ensemble:  expr
 expr:   ID{
   $$ = params_list[$1];
 }
-| ID NUMBER
+| ID NUMBER{
+  $$ = Builder.CreateAnd(Builder.CreateLShr($1,$2),1);
+}
 | NUMBER{
   $$ = Builder.getInt32($1);
 }
@@ -190,17 +192,28 @@ expr:   ID{
 | expr MOD expr{
   $$ = Builder.CreateSRem($1,$3);
 }
-| ID LBRACKET ensemble RBRACKET
+| ID LBRACKET ensemble RBRACKET{
+  $$ = Builder.CreateAnd(Builder.CreateLShr($3,$1),1);
+}
 | LPAREN ensemble RPAREN{
   $$ = $2;
 }
 /* 566 only */
-| LPAREN ensemble RPAREN LBRACKET ensemble RBRACKET
+| LPAREN ensemble RPAREN LBRACKET ensemble RBRACKET{
+  $$ = Builder.CreateAnd(Builder.CreateLShr($3,$1),1);
+}
 | REDUCE AND LPAREN ensemble RPAREN
 | REDUCE OR LPAREN ensemble RPAREN
 | REDUCE XOR LPAREN ensemble RPAREN
 | REDUCE PLUS LPAREN ensemble RPAREN
-| EXPAND  LPAREN ensemble RPAREN
+| EXPAND  LPAREN ensemble RPAREN{
+  Value * tmp = Builder.CreateAnd($3,1);
+  Value * val = 0;
+  for(int i = 0;i<32;++i){
+    Builder.CreateLShl(Builder.CreateOr(val,tmp),1);
+  }
+  $$ = val;
+}
 ;
 
 %%
