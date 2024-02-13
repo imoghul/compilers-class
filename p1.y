@@ -100,8 +100,8 @@ inputs:   IN params_list ENDLINE
     // iterate over arguments of function
     // match name to position
 
-    arguments[$2->at(arg_no)] = a;
-    
+    arguments[$2->at(arg_no)] = &a;
+
 
     arg_no++;
   }
