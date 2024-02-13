@@ -39,7 +39,7 @@ none          { return NONE;  }
 expand        { return EXPAND; }
 
 [a-zA-Z]+     { yylval.var = strdup(yytext); return ID; }
-[0-9]+        { yylval.num = atoi(yytext); return NUMBER; }
+[0-9]+        { yylval.imm = atoi(yytext); return NUMBER; }
 
 "["           { return LBRACKET; }
 "]"           { return RBRACKET; }

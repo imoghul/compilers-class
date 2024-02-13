@@ -49,7 +49,7 @@ IRBuilder<> Builder(TheContext);
   string var;
 }
 
-/*%define parse.trace*/
+%define parse.trace
 
 %type <params_list> params_list
 
