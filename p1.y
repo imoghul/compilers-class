@@ -142,8 +142,7 @@ params_list: ID
 final: FINAL ensemble endline_opt
 {
   // FIX ME, ALWAYS RETURNS 0
-  if(ensemble== Builder.void) Builder.CreateRet(Builder.getInt32(0));
-  else Builder.CreateRet($2);
+  Builder.CreateRet($2);
 }
 ;
 
