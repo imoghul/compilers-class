@@ -160,8 +160,7 @@ expr:   ID{
   $$ = params_list[$1];
 }
 | ID NUMBER{
-  $3 = 1;
-  $$ = Builder.CreateAnd(Builder.CreateLShr($1,$2),$3);
+  $$ = Builder.CreateAnd(Builder.CreateLShr($1,$2),Builder.getInt32(1));
 }
 | NUMBER{
   $$ = Builder.getInt32($1);
@@ -187,7 +186,7 @@ expr:   ID{
 | BINV expr{
   //Value* one;
   //*one = 1;
-  $$ = Builder.CreateNot(Builder.CreateAnd($2,1));
+  $$ = Builder.CreateNot(Builder.CreateAnd($2,Builder.getInt32(1)));
 }
 | expr MUL expr{  
   $$ = Builder.CreateMul($1,$3);
@@ -199,9 +198,7 @@ expr:   ID{
   $$ = Builder.CreateSRem($1,$3);
 }
 | ID LBRACKET ensemble RBRACKET{
-  //Value* one;
-  //*one = 1;
-  $$ = Builder.CreateAnd(Builder.CreateLShr($3,$1),%{1%});
+  $$ = Builder.CreateAnd(Builder.CreateLShr($3,$1),Builder.getInt32(1));
 }
 | LPAREN ensemble RPAREN{
   $$ = $2;
@@ -210,64 +207,54 @@ expr:   ID{
 | LPAREN ensemble RPAREN LBRACKET ensemble RBRACKET{
   //Value* one;
   //*one = 1;
-  $$ = Builder.CreateAnd(Builder.CreateLShr($2,$5),%{1%});
+  $$ = Builder.CreateAnd(Builder.CreateLShr($2,$5),Builder.getInt32(1));
 }
 | REDUCE AND LPAREN ensemble RPAREN{
   Value * val;
-  *val = 1;
+  *val = Builder.getInt32(1);
   Value* mask = $4;
-  //Value* one;
-  //*one = 1;
   for(int i = 0;i<32;++i){
-    val = Builder.CreateAnd(val,Builder.CreateAnd(mask,%{1%}));
-    mask = Builder.CreateLShr(mask,%{1%});
+    val = Builder.CreateAnd(val,Builder.CreateAnd(mask,Builder.getInt32(1)));
+    mask = Builder.CreateLShr(mask,Builder.getInt32(1));
   }
   $$ = val;
 }
 | REDUCE OR LPAREN ensemble RPAREN{
   Value * val;
-  *val = 0;
+  *val = Builder.getInt32(0);
   Value* mask = $4;
-  //Value* one;
-  //*one = 1;
   for(int i = 0;i<32;++i){
-    val = Builder.CreateOr(val,Builder.CreateAnd(mask,%{1%}));
+    val = Builder.CreateOr(val,Builder.CreateAnd(mask,Builder.getInt32(1)));
     mask = Builder.CreateLShr(mask,one);
   }
   $$ = val;
 }
 | REDUCE XOR LPAREN ensemble RPAREN{
   Value * val;
-  *val = 0;
+  *val = Builder.getInt32(0);
   Value* mask = $4;
-  //Value* one;
-  //*one = 1;
   for(int i = 0;i<32;++i){
-    val = Builder.CreateXor(val,Builder.CreateAnd(mask,%{1%}));
+    val = Builder.CreateXor(val,Builder.CreateAnd(mask,Builder.getInt32(1)));
     mask = Builder.CreateLShr(mask,one);
   }
   $$ = val;
 }
 | REDUCE PLUS LPAREN ensemble RPAREN{
   Value * val;
-  *val = 0;
+  *val = Builder.getInt32(0);
   Value* mask = $4;
-  //Value* one;
-  //*one = 1;
   for(int i = 0;i<32;++i){
-    val = Builder.CreateAdd(val,Builder.CreateAnd(mask,%{1%}));
+    val = Builder.CreateAdd(val,Builder.CreateAnd(mask,Builder.getInt32(1)));
     mask = Builder.CreateLShr(mask,one);
   }
   $$ = val;
 }
 | EXPAND  LPAREN ensemble RPAREN{
-  Value * tmp = Builder.CreateAnd($3,%{1%});
+  Value * tmp = Builder.CreateAnd($3,Builder.getInt32(1));
   Value * val;
-  *val = 0;
-  //Value* one;
-  //*one = 1;
+  *val = Builder.getInt32(0);
   for(int i = 0;i<32;++i){
-    val = Builder.CreateOr(Builder.CreateShl(val,%{1%}),tmp);
+    val = Builder.CreateOr(Builder.CreateShl(val,Builder.getInt32(1)),tmp);
   }
   $$ = val;
 }
