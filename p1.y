@@ -143,7 +143,7 @@ params_list: ID
 final: FINAL ensemble endline_opt
 {
   // FIX ME, ALWAYS RETURNS 0
-  Builder.CreateRet(Builder.getInt32(0));
+  Builder.CreateRet($2);
 }
 ;
 
