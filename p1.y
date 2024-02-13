@@ -3,6 +3,7 @@
 #include <list>
 #include <vector>
 #include <map>
+#include <unordered_map>
 #include <iostream>
 #include <string>
 #include <memory>
@@ -29,13 +30,16 @@ extern FILE *yyin;
 int yylex();
 void yyerror(const char*);
 int yyparse();
- 
+
+unordered_map<string,Value*> arguments;
+
 // Needed for LLVM
 string funName;
 Module *M;
 LLVMContext TheContext;
 IRBuilder<> Builder(TheContext);
- 
+
+
 %}
 
 %union {
@@ -95,6 +99,10 @@ inputs:   IN params_list ENDLINE
   for(auto &a: Function->args()) {
     // iterate over arguments of function
     // match name to position
+
+    arguments[a] = nullptr;
+
+    arg_no++;
   }
   
   //Add a basic block to main to hold instructions, and set Builder
@@ -122,10 +130,12 @@ params_list: ID
 {
   $$ = new vector<string>;
   // add ID to vector
+  $$.push_back(ID);
 }
 | params_list COMMA ID
 {
   // add ID to $1
+  $1.push_back(ID);
 }
 ;
 
@@ -146,9 +156,15 @@ statements:   statement
             | statements statement 
 ;
 
-statement: ID ASSIGN ensemble ENDLINE
-| ID NUMBER ASSIGN ensemble ENDLINE
-| ID LBRACKET ensemble RBRACKET ASSIGN ensemble ENDLINE
+statement: ID ASSIGN ensemble ENDLINE{
+  arguments[$1] = $3;
+}
+| ID NUMBER ASSIGN ensemble ENDLINE{
+  arguments[$1] = Builder.CreateOr(arguments[$1],Builder.CreateShl(Builder.CreateAnd($4,Builder.getInt32(1)),NUMBER));
+}
+| ID LBRACKET ensemble RBRACKET ASSIGN ensemble ENDLINE{
+  arguments[$1] = Builder.CreateOr(arguments[$1],Builder.CreateShl(Builder.CreateAnd($6,Builder.getInt32(1)),$3));
+}
 ;
 
 ensemble:  expr
@@ -158,10 +174,10 @@ ensemble:  expr
 ;
 
 expr:   ID{
-  $$ = params_list[$1];
+  $$ = arguments[$1];
 }
 | ID NUMBER{
-  $$ = Builder.CreateAnd(Builder.CreateLShr(params_list[$1],$2),Builder.getInt32(1));
+  $$ = Builder.CreateAnd(Builder.CreateLShr(arguments[$1],$2),Builder.getInt32(1));
 }
 | NUMBER{
   $$ = Builder.getInt32($1);

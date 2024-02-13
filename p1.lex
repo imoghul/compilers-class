@@ -38,7 +38,7 @@ final         { return FINAL; }
 none          { return NONE;  }
 expand        { return EXPAND; }
 
-[a-zA-Z]+     { yylval.id = strdup(yytext); return ID; }
+[a-zA-Z]+     { yylval.var = strdup(yytext); return ID; }
 [0-9]+        { yylval.num = atoi(yytext); return NUMBER; }
 
 "["           { return LBRACKET; }
