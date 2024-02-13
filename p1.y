@@ -160,9 +160,8 @@ expr:   ID{
   $$ = params_list[$1];
 }
 | ID NUMBER{
-  //Value* one;
-  //*one = 1;
-  $$ = Builder.CreateAnd(Builder.CreateLShr($1,$2),%{1%});
+  $3 = 1;
+  $$ = Builder.CreateAnd(Builder.CreateLShr($1,$2),$3);
 }
 | NUMBER{
   $$ = Builder.getInt32($1);
@@ -188,7 +187,7 @@ expr:   ID{
 | BINV expr{
   //Value* one;
   //*one = 1;
-  $$ = Builder.CreateNot(Builder.CreateAnd($2,%{1%}));
+  $$ = Builder.CreateNot(Builder.CreateAnd($2,1));
 }
 | expr MUL expr{  
   $$ = Builder.CreateMul($1,$3);
