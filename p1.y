@@ -214,7 +214,7 @@ expr:   ID{
   $$ = Builder.CreateSRem($1,$3);
 }
 | ID LBRACKET ensemble RBRACKET{
-  $$ = Builder.CreateAnd(Builder.CreateLShr($3,$1),Builder.getInt32(1));
+  $$ = Builder.CreateAnd(Builder.CreateLShr($3,arguments[$1]),Builder.getInt32(1));
 }
 | LPAREN ensemble RPAREN{
   $$ = $2;
