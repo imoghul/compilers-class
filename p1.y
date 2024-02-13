@@ -42,6 +42,7 @@ IRBuilder<> Builder(TheContext);
   vector<string> *params_list;
   Value* val;
   int imm;
+  int var
 }
 
 /*%define parse.trace*/
@@ -51,7 +52,7 @@ IRBuilder<> Builder(TheContext);
 %token IN FINAL
 %token ERROR
 %token <imm> NUMBER
-%token <reg> ID 
+%token <var> ID 
 %token BINV INV PLUS MINUS XOR AND OR MUL DIV MOD
 %token COMMA ENDLINE ASSIGN LBRACKET RBRACKET LPAREN RPAREN NONE COLON
 %token REDUCE EXPAND
