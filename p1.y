@@ -131,12 +131,12 @@ params_list: ID
 {
   $$ = new vector<string>;
   // add ID to vector
-  $$->push_back(ID);
+  $$->push_back(ID.var);
 }
 | params_list COMMA ID
 {
   // add ID to $1
-  $1->push_back(ID);
+  $1->push_back(ID.var);
 }
 ;
 
