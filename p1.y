@@ -100,6 +100,7 @@ inputs:   IN params_list ENDLINE
     // iterate over arguments of function
     // match name to position
 
+    printf("%d, %d\n",arg_no,$2->size());
     arguments[$2->at(arg_no)] = &a;
 
 
