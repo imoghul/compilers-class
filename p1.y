@@ -261,11 +261,11 @@ expr:   ID{
   $$ = val;
 }
 | REDUCE PLUS LPAREN ensemble RPAREN{
-  Value * val = Builder.getInt32(0);
-  for(int i = 0;i<32;++i){
-    val = Builder.CreateAdd(val,Builder.CreateAnd(Builder.CreateLShr($4,Builder.getInt32(i)),Builder.getInt32(1)));
-  }
-  $$ = val;
+  //Value * val = Builder.getInt32(0);
+  //for(int i = 0;i<32;++i){
+  //  val = Builder.CreateAdd(val,Builder.CreateAnd(Builder.CreateLShr($4,Builder.getInt32(i)),Builder.getInt32(1)));
+  //}
+  $$ = $4;//val;
 }
 | EXPAND  LPAREN ensemble RPAREN{
   Value * tmp = Builder.CreateAnd($3,Builder.getInt32(1));
