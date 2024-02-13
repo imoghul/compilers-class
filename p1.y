@@ -184,8 +184,6 @@ expr:   ID{
   $$ = Builder.CreateNot($2);
 }
 | BINV expr{
-  //Value* one;
-  //*one = 1;
   $$ = Builder.CreateNot(Builder.CreateAnd($2,Builder.getInt32(1)));
 }
 | expr MUL expr{  
@@ -205,8 +203,6 @@ expr:   ID{
 }
 /* 566 only */
 | LPAREN ensemble RPAREN LBRACKET ensemble RBRACKET{
-  //Value* one;
-  //*one = 1;
   $$ = Builder.CreateAnd(Builder.CreateLShr($2,$5),Builder.getInt32(1));
 }
 | REDUCE AND LPAREN ensemble RPAREN{
@@ -225,7 +221,7 @@ expr:   ID{
   Value* mask = $4;
   for(int i = 0;i<32;++i){
     val = Builder.CreateOr(val,Builder.CreateAnd(mask,Builder.getInt32(1)));
-    mask = Builder.CreateLShr(mask,one);
+    mask = Builder.CreateLShr(mask,Builder.getInt32(1));
   }
   $$ = val;
 }
@@ -235,7 +231,7 @@ expr:   ID{
   Value* mask = $4;
   for(int i = 0;i<32;++i){
     val = Builder.CreateXor(val,Builder.CreateAnd(mask,Builder.getInt32(1)));
-    mask = Builder.CreateLShr(mask,one);
+    mask = Builder.CreateLShr(mask,Builder.getInt32(1));
   }
   $$ = val;
 }
@@ -245,7 +241,7 @@ expr:   ID{
   Value* mask = $4;
   for(int i = 0;i<32;++i){
     val = Builder.CreateAdd(val,Builder.CreateAnd(mask,Builder.getInt32(1)));
-    mask = Builder.CreateLShr(mask,one);
+    mask = Builder.CreateLShr(mask,Builder.getInt32(1));
   }
   $$ = val;
 }
