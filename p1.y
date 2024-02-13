@@ -171,13 +171,13 @@ statement: ID ASSIGN ensemble ENDLINE{
 ensemble:  expr{
   $$ = $1;
 }
-| expr COLON NUMBER                  // 566 only{
+| expr COLON NUMBER{
   $$ = Builder.CreateShl($1,$3);
 }
 | ensemble COMMA expr{
   $$ = Builder.CreateOr($1,$3);
 }
-| ensemble COMMA expr COLON NUMBER   // 566 only{
+| ensemble COMMA expr COLON NUMBER  {
   $$ = Builder.CreateOr($1, Builder.CreateShl($3,%5));
 }
 ;
