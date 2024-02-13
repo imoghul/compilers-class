@@ -131,12 +131,12 @@ params_list: ID
 {
   $$ = new vector<string>;
   // add ID to vector
-  $$->push_back(ID.var);
+  $$->push_back(strdup($1));
 }
 | params_list COMMA ID
 {
   // add ID to $1
-  $1->push_back(ID.var);
+  $1->push_back(strdup($3));
 }
 ;
 
@@ -161,7 +161,7 @@ statement: ID ASSIGN ensemble ENDLINE{
   arguments[$1] = $3;
 }
 | ID NUMBER ASSIGN ensemble ENDLINE{
-  arguments[$1] = Builder.CreateOr(arguments[$1],Builder.CreateShl(Builder.CreateAnd($4,Builder.getInt32(1)),NUMBER));
+  arguments[$1] = Builder.CreateOr(arguments[$1],Builder.CreateShl(Builder.CreateAnd($4,Builder.getInt32(1)),$2));
 }
 | ID LBRACKET ensemble RBRACKET ASSIGN ensemble ENDLINE{
   arguments[$1] = Builder.CreateOr(arguments[$1],Builder.CreateShl(Builder.CreateAnd($6,Builder.getInt32(1)),$3));
