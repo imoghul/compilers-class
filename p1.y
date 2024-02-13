@@ -143,6 +143,7 @@ params_list: ID
 final: FINAL ensemble endline_opt
 {
   // FIX ME, ALWAYS RETURNS 0
+  
   Builder.CreateRet($2);
 }
 ;
@@ -168,11 +169,7 @@ statement: ID ASSIGN ensemble ENDLINE{
 }
 ;
 
-ensemble:  %empty{
-  $$ = Builder.getInt32(0);
-}
-|
-expr{
+ensemble:  expr{
   $$ = $1;
 }
 | expr COLON NUMBER{
