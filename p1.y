@@ -160,9 +160,9 @@ expr:   ID{
   $$ = params_list[$1];
 }
 | ID NUMBER{
-  Value* one;
-  *one = 1;
-  $$ = Builder.CreateAnd(Builder.CreateLShr($1,$2),one);
+  //Value* one;
+  //*one = 1;
+  $$ = Builder.CreateAnd(Builder.CreateLShr($1,$2),%{1%});
 }
 | NUMBER{
   $$ = Builder.getInt32($1);
@@ -186,9 +186,9 @@ expr:   ID{
   $$ = Builder.CreateNot($2);
 }
 | BINV expr{
-  Value* one;
-  *one = 1;
-  $$ = Builder.CreateNot(Builder.CreateAnd($2,one));
+  //Value* one;
+  //*one = 1;
+  $$ = Builder.CreateNot(Builder.CreateAnd($2,%{1%}));
 }
 | expr MUL expr{  
   $$ = Builder.CreateMul($1,$3);
@@ -200,28 +200,28 @@ expr:   ID{
   $$ = Builder.CreateSRem($1,$3);
 }
 | ID LBRACKET ensemble RBRACKET{
-  Value* one;
-  *one = 1;
-  $$ = Builder.CreateAnd(Builder.CreateLShr($3,$1),one);
+  //Value* one;
+  //*one = 1;
+  $$ = Builder.CreateAnd(Builder.CreateLShr($3,$1),%{1%});
 }
 | LPAREN ensemble RPAREN{
   $$ = $2;
 }
 /* 566 only */
 | LPAREN ensemble RPAREN LBRACKET ensemble RBRACKET{
-  Value* one;
-  *one = 1;
-  $$ = Builder.CreateAnd(Builder.CreateLShr($2,$5),one);
+  //Value* one;
+  //*one = 1;
+  $$ = Builder.CreateAnd(Builder.CreateLShr($2,$5),%{1%});
 }
 | REDUCE AND LPAREN ensemble RPAREN{
   Value * val;
   *val = 1;
   Value* mask = $4;
-  Value* one;
-  *one = 1;
+  //Value* one;
+  //*one = 1;
   for(int i = 0;i<32;++i){
-    val = Builder.CreateAnd(val,Builder.CreateAnd(mask,one));
-    mask = Builder.CreateLShr(mask,one);
+    val = Builder.CreateAnd(val,Builder.CreateAnd(mask,%{1%}));
+    mask = Builder.CreateLShr(mask,%{1%});
   }
   $$ = val;
 }
@@ -229,10 +229,10 @@ expr:   ID{
   Value * val;
   *val = 0;
   Value* mask = $4;
-  Value* one;
-  *one = 1;
+  //Value* one;
+  //*one = 1;
   for(int i = 0;i<32;++i){
-    val = Builder.CreateOr(val,Builder.CreateAnd(mask,one));
+    val = Builder.CreateOr(val,Builder.CreateAnd(mask,%{1%}));
     mask = Builder.CreateLShr(mask,one);
   }
   $$ = val;
@@ -241,10 +241,10 @@ expr:   ID{
   Value * val;
   *val = 0;
   Value* mask = $4;
-  Value* one;
-  *one = 1;
+  //Value* one;
+  //*one = 1;
   for(int i = 0;i<32;++i){
-    val = Builder.CreateXor(val,Builder.CreateAnd(mask,one));
+    val = Builder.CreateXor(val,Builder.CreateAnd(mask,%{1%}));
     mask = Builder.CreateLShr(mask,one);
   }
   $$ = val;
@@ -253,22 +253,22 @@ expr:   ID{
   Value * val;
   *val = 0;
   Value* mask = $4;
-  Value* one;
-  *one = 1;
+  //Value* one;
+  //*one = 1;
   for(int i = 0;i<32;++i){
-    val = Builder.CreateAdd(val,Builder.CreateAnd(mask,one));
+    val = Builder.CreateAdd(val,Builder.CreateAnd(mask,%{1%}));
     mask = Builder.CreateLShr(mask,one);
   }
   $$ = val;
 }
 | EXPAND  LPAREN ensemble RPAREN{
-  Value * tmp = Builder.CreateAnd($3,1);
+  Value * tmp = Builder.CreateAnd($3,%{1%});
   Value * val;
   *val = 0;
-  Value* one;
-  *one = 1;
+  //Value* one;
+  //*one = 1;
   for(int i = 0;i<32;++i){
-    val = Builder.CreateOr(Builder.CreateLShl(val,one),tmp);
+    val = Builder.CreateOr(Builder.CreateShl(val,%{1%}),tmp);
   }
   $$ = val;
 }
