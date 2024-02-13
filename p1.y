@@ -210,7 +210,7 @@ expr:   ID{
   $$ = Builder.CreateNot($2);
 }
 | BINV expr{
-  $$ = Builder.CreateNot(Builder.CreateAnd($2,Builder.getInt32(1)));
+  $$ = Builder.CreateAnd(Builder.CreateNot($2),Builder.getInt32(1));
 }
 | expr MUL expr{  
   $$ = Builder.CreateMul($1,$3);
