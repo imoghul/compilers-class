@@ -175,7 +175,7 @@ ensemble:  expr{
   $$ = Builder.CreateShl($1,$3);
 }
 | ensemble COMMA expr{
-  $$ = Builder.CreateOr($1,$3);
+  $$ = Builder.CreateOr($3, Builder.CreateShl($1,Builder.getInt32(1)));
 }
 | ensemble COMMA expr COLON NUMBER{
   $$ = Builder.CreateOr($1, Builder.CreateShl($3,$5));
