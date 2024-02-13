@@ -170,7 +170,7 @@ expr:   ID{
   $$ = Builder.CreateSub($1,$3);
 }
 | expr XOR expr{
-  $$ = Builder.CreateXor($1,$3)
+  $$ = Builder.CreateXor($1,$3);
 }
 | expr AND expr{
   $$ = Builder.CreateAnd($1,$3);
