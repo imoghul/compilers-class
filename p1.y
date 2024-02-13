@@ -49,7 +49,7 @@ IRBuilder<> Builder(TheContext);
 %token IN FINAL
 %token ERROR
 %token <imm> NUMBER
-%token ID 
+%token <reg> ID 
 %token BINV INV PLUS MINUS XOR AND OR MUL DIV MOD
 %token COMMA ENDLINE ASSIGN LBRACKET RBRACKET LPAREN RPAREN NONE COLON
 %token REDUCE EXPAND
@@ -200,17 +200,49 @@ expr:   ID{
 }
 /* 566 only */
 | LPAREN ensemble RPAREN LBRACKET ensemble RBRACKET{
-  $$ = Builder.CreateAnd(Builder.CreateLShr($3,$1),1);
+  $$ = Builder.CreateAnd(Builder.CreateLShr($2,$5),1);
 }
-| REDUCE AND LPAREN ensemble RPAREN
-| REDUCE OR LPAREN ensemble RPAREN
-| REDUCE XOR LPAREN ensemble RPAREN
-| REDUCE PLUS LPAREN ensemble RPAREN
+| REDUCE AND LPAREN ensemble RPAREN{
+  Value * val = 1;
+  Value* mask = $4;
+  for(int i = 0;i<32;++i){
+    val = Builder.CreateAnd(val,Builder.CreateAnd(mask,1));
+    mask = Builder.CreateLShr(mask,1);
+  }
+  $$ = val;
+}
+| REDUCE OR LPAREN ensemble RPAREN{
+  Value * val = 0;
+  Value* mask = $4;
+  for(int i = 0;i<32;++i){
+    val = Builder.CreateOr(val,Builder.CreateAnd(mask,1));
+    mask = Builder.CreateLShr(mask,1);
+  }
+  $$ = val;
+}
+| REDUCE XOR LPAREN ensemble RPAREN{
+  Value * val = 0;
+  Value* mask = $4;
+  for(int i = 0;i<32;++i){
+    val = Builder.CreateXor(val,Builder.CreateAnd(mask,1));
+    mask = Builder.CreateLShr(mask,1);
+  }
+  $$ = val;
+}
+| REDUCE PLUS LPAREN ensemble RPAREN{
+  Value * val = 0;
+  Value* mask = $4;
+  for(int i = 0;i<32;++i){
+    val = Builder.CreateAdd(val,Builder.CreateAnd(mask,1));
+    mask = Builder.CreateLShr(mask,1);
+  }
+  $$ = val;
+}
 | EXPAND  LPAREN ensemble RPAREN{
   Value * tmp = Builder.CreateAnd($3,1);
   Value * val = 0;
   for(int i = 0;i<32;++i){
-    Builder.CreateLShl(Builder.CreateOr(val,tmp),1);
+    val = Builder.CreateOr(Builder.CreateLShl(val,1),tmp);
   }
   $$ = val;
 }
