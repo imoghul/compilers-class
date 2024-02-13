@@ -233,7 +233,7 @@ expr:   ID{
 | REDUCE AND LPAREN ensemble RPAREN{
   Value * val;
   val = Builder.getInt32(1);
-  Value* mask = $4;
+  Value* mask = Builder.CreateOr($4,Builder.getInt32(0));
   for(int i = 0;i<32;++i){
     val = Builder.CreateAnd(val,Builder.CreateAnd(mask,Builder.getInt32(1)));
     mask = Builder.CreateLShr(mask,Builder.getInt32(1));
@@ -243,7 +243,7 @@ expr:   ID{
 | REDUCE OR LPAREN ensemble RPAREN{
   Value * val;
   val = Builder.getInt32(0);
-  Value* mask = $4;
+  Value* mask = Builder.CreateOr($4,Builder.getInt32(0));
   for(int i = 0;i<32;++i){
     val = Builder.CreateOr(val,Builder.CreateAnd(mask,Builder.getInt32(1)));
     mask = Builder.CreateLShr(mask,Builder.getInt32(1));
@@ -253,7 +253,7 @@ expr:   ID{
 | REDUCE XOR LPAREN ensemble RPAREN{
   Value * val;
   val = Builder.getInt32(0);
-  Value* mask = $4;
+  Value* mask = Builder.CreateOr($4,Builder.getInt32(0));
   for(int i = 0;i<32;++i){
     val = Builder.CreateXor(val,Builder.CreateAnd(mask,Builder.getInt32(1)));
     mask = Builder.CreateLShr(mask,Builder.getInt32(1));
@@ -261,9 +261,8 @@ expr:   ID{
   $$ = val;
 }
 | REDUCE PLUS LPAREN ensemble RPAREN{
-  Value * val;
-  val = Builder.getInt32(0);
-  Value* mask = $4;
+  Value * val = Builder.getInt32(0);
+  Value* mask = Builder.CreateOr($4,Builder.getInt32(0));
   for(int i = 0;i<32;++i){
     val = Builder.CreateAdd(val,Builder.CreateAnd(mask,Builder.getInt32(1)));
     mask = Builder.CreateLShr(mask,Builder.getInt32(1));
