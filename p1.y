@@ -42,7 +42,7 @@ IRBuilder<> Builder(TheContext);
   vector<string> *params_list;
   Value* val;
   int imm;
-  int var
+  int var;
 }
 
 /*%define parse.trace*/
@@ -161,7 +161,7 @@ expr:   ID{
   $$ = params_list[$1];
 }
 | ID NUMBER{
-  $$ = Builder.CreateAnd(Builder.CreateLShr($1,$2),Builder.getInt32(1));
+  $$ = Builder.CreateAnd(Builder.CreateLShr(params_list[$1],$2),Builder.getInt32(1));
 }
 | NUMBER{
   $$ = Builder.getInt32($1);
