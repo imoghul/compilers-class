@@ -231,34 +231,34 @@ expr:   ID{
   $$ = Builder.CreateAnd(Builder.CreateLShr($2,$5),Builder.getInt32(1));
 }
 | REDUCE AND LPAREN ensemble RPAREN{
-  Value * val;
-  val = Builder.getInt32(1);
-  Value* mask = Builder.CreateOr($4,Builder.getInt32(0));
-  for(int i = 0;i<32;++i){
-    val = Builder.CreateAnd(val,Builder.CreateAnd(mask,Builder.getInt32(1)));
-    mask = Builder.CreateLShr(mask,Builder.getInt32(1));
-  }
-  $$ = val;
+  //Value * val;
+  //val = Builder.getInt32(1);
+  //Value* mask = Builder.CreateOr($4,Builder.getInt32(0));
+  //for(int i = 0;i<32;++i){
+  //  val = Builder.CreateAnd(val,Builder.CreateAnd(mask,Builder.getInt32(1)));
+  //  mask = Builder.CreateLShr(mask,Builder.getInt32(1));
+  //}
+  $$ = $4;//val;
 }
 | REDUCE OR LPAREN ensemble RPAREN{
-  Value * val;
-  val = Builder.getInt32(0);
-  Value* mask = Builder.CreateOr($4,Builder.getInt32(0));
-  for(int i = 0;i<32;++i){
-    val = Builder.CreateOr(val,Builder.CreateAnd(mask,Builder.getInt32(1)));
-    mask = Builder.CreateLShr(mask,Builder.getInt32(1));
-  }
-  $$ = val;
+  //Value * val;
+  //val = Builder.getInt32(0);
+  //Value* mask = Builder.CreateOr($4,Builder.getInt32(0));
+  //for(int i = 0;i<32;++i){
+  //  val = Builder.CreateOr(val,Builder.CreateAnd(mask,Builder.getInt32(1)));
+  //  mask = Builder.CreateLShr(mask,Builder.getInt32(1));
+  //}
+  $$ = $4;//val;
 }
 | REDUCE XOR LPAREN ensemble RPAREN{
-  Value * val;
-  val = Builder.getInt32(0);
-  Value* mask = Builder.CreateOr($4,Builder.getInt32(0));
-  for(int i = 0;i<32;++i){
-    val = Builder.CreateXor(val,Builder.CreateAnd(mask,Builder.getInt32(1)));
-    mask = Builder.CreateLShr(mask,Builder.getInt32(1));
-  }
-  $$ = val;
+  //Value * val;
+  //val = Builder.getInt32(0);
+  //Value* mask = Builder.CreateOr($4,Builder.getInt32(0));
+  //for(int i = 0;i<32;++i){
+  //  val = Builder.CreateXor(val,Builder.CreateAnd(mask,Builder.getInt32(1)));
+  //  mask = Builder.CreateLShr(mask,Builder.getInt32(1));
+  //}
+  $$ = $4;//val;
 }
 | REDUCE PLUS LPAREN ensemble RPAREN{
   //Value * val = Builder.getInt32(0);
