@@ -46,7 +46,7 @@ IRBuilder<> Builder(TheContext);
   vector<string> *params_list;
   Value* val;
   int imm;
-  string var;
+  char* var;
 }
 
 %define parse.trace
