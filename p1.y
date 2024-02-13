@@ -40,6 +40,8 @@ IRBuilder<> Builder(TheContext);
 
 %union {
   vector<string> *params_list;
+  int val;
+  int imm;
 }
 
 /*%define parse.trace*/
