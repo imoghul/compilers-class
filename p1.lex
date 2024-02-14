@@ -37,6 +37,7 @@ in            { return IN; }
 final         { return FINAL; }
 none          { return NONE;  }
 expand        { return EXPAND; }
+reduce        { return REDUCE; }
 
 [a-zA-Z]+     { yylval.var = strdup(yytext); return ID; }
 [0-9]+        { yylval.imm = atoi(yytext); return NUMBER; }
