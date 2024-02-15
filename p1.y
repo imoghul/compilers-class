@@ -160,10 +160,10 @@ statement: ID ASSIGN ensemble ENDLINE{
   arguments[$1] = $3;
 }
 | ID NUMBER ASSIGN ensemble ENDLINE{
-  arguments[$1] = Builder.CreateOr(arguments[$1],Builder.CreateShl(Builder.CreateAnd($4,Builder.getInt32(1)),$2));
+  arguments[$1] = Builder.CreateAnd(arguments[$1],Builder.CreateNot(Builder.CreateShl(Builder.CreateAnd($4,Builder.getInt32(1)),$2)));
 }
 | ID LBRACKET ensemble RBRACKET ASSIGN ensemble ENDLINE{
-  arguments[$1] = Builder.CreateOr(arguments[$1],Builder.CreateShl(Builder.CreateAnd($6,Builder.getInt32(1)),$3));
+  arguments[$1] = Builder.CreateAnd(arguments[$1],Builder.CreateNot(Builder.CreateShl(Builder.CreateAnd($6,Builder.getInt32(1)),$3)));
 }
 ;
 
