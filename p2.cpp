@@ -22,12 +22,11 @@
 #include "llvm/LinkAllPasses.h"
 #include "llvm/Support/ManagedStatic.h"
 #include "llvm/Support/SourceMgr.h"
+#include "llvm/Analysis/InstructionSimplify.h"
 
 using namespace llvm;
 
-extern "C" {
-  void CommonSubexpressionElimination(LLVMModuleRef M);
-}
+static void CommonSubexpressionElimination(Module *);
 
 static void summarize(Module *M);
 static void print_csv_file(std::string outputfile);
@@ -96,12 +95,12 @@ int main(int argc, char **argv) {
     }
 
     if (!NoCSE) {
-        CommonSubexpressionElimination(wrap(M.get()));
+        CommonSubexpressionElimination(M.get());
     }
 
     // Collect statistics on Module
     summarize(M.get());
-    print_csv_file(OutputFilename+".stats");
+    print_csv_file(OutputFilename);
 
     if (Verbose)
         PrintStatistics(errs());
@@ -131,6 +130,7 @@ static void summarize(Module *M) {
         if (i->begin() != i->end()) {
             nFunctions++;
         }
+
         for (auto j = i->begin(); j != i->end(); j++) {
             for (auto k = j->begin(); k != j->end(); k++) {
                 Instruction &I = *k;
@@ -147,7 +147,7 @@ static void summarize(Module *M) {
 
 static void print_csv_file(std::string outputfile)
 {
-    std::ofstream stats(outputfile);
+    std::ofstream stats(outputfile + ".stats");
     auto a = GetStatistics();
     for (auto p : a) {
         stats << p.first.str() << "," << p.second << std::endl;
@@ -155,4 +155,14 @@ static void print_csv_file(std::string outputfile)
     stats.close();
 }
 
+static llvm::Statistic CSEDead = {"", "CSEDead", "CSE found dead instructions"};
+static llvm::Statistic CSEElim = {"", "CSEElim", "CSE redundant instructions"};
+static llvm::Statistic CSESimplify = {"", "CSESimplify", "CSE simplified instructions"};
+static llvm::Statistic CSELdElim = {"", "CSELdElim", "CSE redundant loads"};
+static llvm::Statistic CSEStore2Load = {"", "CSEStore2Load", "CSE forwarded store to load"};
+static llvm::Statistic CSEStElim = {"", "CSEStElim", "CSE redundant stores"};
+
+static void CommonSubexpressionElimination(Module *) {
+    // Implement this function
+}
 
