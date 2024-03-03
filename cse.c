@@ -121,7 +121,7 @@ void CommonSubexpressionElimination(LLVMModuleRef Module)
                     printf("Found a dead instruction to delete !\n");
                 }
                 else
-                    inst_iter = LLVMGetNextInstruction(inst_iter)
+                    inst_iter = LLVMGetNextInstruction(inst_iter);
             }
         }
     }
