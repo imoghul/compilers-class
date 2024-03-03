@@ -101,9 +101,9 @@ void CommonSubexpressionElimination(LLVMModuleRef Module)
     CSEStElim = LLVMStatisticsCreate("CSEStElim", "CSE redundant stores");
 
     /* Implement here! */
-    LLVMPassManagerRef PM = LLVMCreatePassManager();
-    LLVMAddScalarReplAggregatesPass(PM);
-    LLVMRunPassManager(PM, Module);
+    // LLVMPassManagerRef PM = LLVMCreatePassManager();
+    // LLVMAddScalarReplAggregatesPass(PM);
+    // LLVMRunPassManager(PM, Module);
 
     LLVMValueRef F=NULL;
     for (F = LLVMGetFirstFunction(Module); F != NULL; F = LLVMGetNextFunction(F))
