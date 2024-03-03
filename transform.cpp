@@ -29,5 +29,5 @@ LLVMValueRef InstructionSimplify(LLVMValueRef I)
 {
   Instruction *II = (Instruction*)unwrap(I);
   const Module* M = II->getModule();
-  return wrap( SimplifyInstruction((Instruction*)unwrap(I), M->getDataLayout() ));
+  return wrap( simplifyInstruction((Instruction*)unwrap(I), M->getDataLayout() ));
 }
