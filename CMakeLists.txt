@@ -1,7 +1,7 @@
-ke_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.5)
 project("project2")
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 14)
 #set(CMAKE_VERBOSE_MAKEFILE ON)
 
 find_package(LLVM REQUIRED CONFIG)
@@ -18,13 +18,12 @@ llvm_map_components_to_libnames(llvm_libs analysis bitreader bitwriter codegen c
 
 include_directories(.)
 
-add_executable(p2 p2.cpp)
+add_executable(p2 p2.cpp cse.c dominance.cpp valmap.cpp loop.cpp transform.cpp worklist.cpp cfg.cpp stats.cpp)
 target_link_libraries(p2 ${llvm_libs})
 
 enable_testing()
 add_test(NAME Usage COMMAND p2 -h)
 set_tests_properties(Usage
-	        PROPERTIES PASS_REGULAR_EXPRESSION "USAGE:"
-		        )
-		add_subdirectory(tests)
-
+        PROPERTIES PASS_REGULAR_EXPRESSION "USAGE:"
+        )
+add_subdirectory(tests)
