@@ -116,7 +116,7 @@ void CommonSubexpressionElimination(LLVMModuleRef Module)
             {
                 // update iterator first, before erasing
                 if (isDead(inst_iter))
-                {
+                { 
                     LLVMInstructionEraseFromParent(inst_iter);
                     printf("Found a dead instruction to delete !\n");
                 }
