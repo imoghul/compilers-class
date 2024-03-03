@@ -143,8 +143,8 @@ Summarize(LLVMModuleRef Module, const char *id, const char* filename)
 	      MyStats.insns++;
 	      
 	      // get the basic block of this instruction
-	      LLVMBasicBlockRef ref = 
-		LLVMGetInstructionParent(inst_iter);
+	  //     LLVMBasicBlockRef ref = 
+		// LLVMGetInstructionParent(inst_iter);
 
 	      if ( LLVMIsALoadInst(inst_iter) ) {
 		MyStats.loads++;
