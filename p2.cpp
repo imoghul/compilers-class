@@ -26,8 +26,6 @@
 
 using namespace llvm;
 
-
-
 bool isDead(Instruction &I)
 {
 
@@ -105,8 +103,6 @@ bool isDead(Instruction &I)
 
     return 0;
 }
-
-
 
 static void CommonSubexpressionElimination(Module *);
 
@@ -255,7 +251,7 @@ static llvm::Statistic CSELdElim = {"", "CSELdElim", "CSE redundant loads"};
 static llvm::Statistic CSEStore2Load = {"", "CSEStore2Load", "CSE forwarded store to load"};
 static llvm::Statistic CSEStElim = {"", "CSEStElim", "CSE redundant stores"};
 
-static void CommonSubexpressionElimination(Module * M)
+static void CommonSubexpressionElimination(Module *M)
 {
     // Implement this function
 
@@ -265,12 +261,12 @@ static void CommonSubexpressionElimination(Module * M)
         {
             for (auto i = bb->begin(); i != bb->end();)
             {
-                    if (isDead(*i)){
-                        (*i).eraseFromParent();
-                    }
-                    else
-                        i++;
+                if (isDead(*i))
+                {
+                    (*i).eraseFromParent();
                 }
+                else
+                    i++;
             }
         }
     }
