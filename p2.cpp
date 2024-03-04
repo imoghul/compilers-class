@@ -255,7 +255,7 @@ static llvm::Statistic CSELdElim = {"", "CSELdElim", "CSE redundant loads"};
 static llvm::Statistic CSEStore2Load = {"", "CSEStore2Load", "CSE forwarded store to load"};
 static llvm::Statistic CSEStElim = {"", "CSEStElim", "CSE redundant stores"};
 
-static void CommonSubexpressionElimination(Module *)
+static void CommonSubexpressionElimination(Module * M)
 {
     // Implement this function
 
@@ -268,7 +268,7 @@ static void CommonSubexpressionElimination(Module *)
                 for (BasicBlock::iterator bit = bb.begin(); bit != bb.end();)
                 {
                     Instruction &I = *bit;
-                    if (isDead(&I)){
+                    if (isDead(I)){
                         I.eraseFromParent();
                     }
                     else
