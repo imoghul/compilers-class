@@ -261,12 +261,12 @@ static void CommonSubexpressionElimination(Module *M)
         {
             for (auto i = bb->begin(); i != bb->end();)
             {
-                if (isDead(*i))
+                auto& inst = *i;
+                i++;
+                if (isDead(isnt))
                 {
-                    (*i).eraseFromParent();
+                    isnt.eraseFromParent();
                 }
-                else
-                    i++;
             }
         }
     }
