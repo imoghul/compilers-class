@@ -263,16 +263,13 @@ static void CommonSubexpressionElimination(Module * M)
     {
         for (auto bb = f->begin(); bb != f->end(); bb++)
         {
-            for (auto i = bb->begin(); i != bb->end(); i++)
+            for (auto i = bb->begin(); i != bb->end();)
             {
-                for (BasicBlock::iterator bit = bb.begin(); bit != bb.end();)
-                {
-                    Instruction &I = *bit;
-                    if (isDead(I)){
-                        I.eraseFromParent();
+                    if (isDead(*i)){
+                        (*i).eraseFromParent();
                     }
                     else
-                        bit++;
+                        i++;
                 }
             }
         }
