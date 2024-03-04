@@ -23,6 +23,8 @@
 #include "llvm/Support/ManagedStatic.h"
 #include "llvm/Support/SourceMgr.h"
 #include "llvm/Analysis/InstructionSimplify.h"
+#include "dominance.h"
+#include "transform.h"
 
 using namespace llvm;
 
@@ -251,10 +253,21 @@ static llvm::Statistic CSELdElim = {"", "CSELdElim", "CSE redundant loads"};
 static llvm::Statistic CSEStore2Load = {"", "CSEStore2Load", "CSE forwarded store to load"};
 static llvm::Statistic CSEStElim = {"", "CSEStElim", "CSE redundant stores"};
 
+static bool isCSE(Instruction &i1, Instruction &i2)
+{
+    if (i1.getOpcode() != i2.getOpcode())
+        return false;
+    if (i1.getOpcode() == Instruction::Load || i1.getOpcode() == Instruction::Store)
+        return false;
+}
+
 static void CommonSubexpressionElimination(Module *M)
 {
     // Implement this function
+
+    // Optimization 0&1
     int numInstr = 0;
+    int CSESimplify = 0;
     for (auto f = M->begin(); f != M->end(); f++)
     {
         for (auto bb = f->begin(); bb != f->end(); bb++)
@@ -262,24 +275,56 @@ static void CommonSubexpressionElimination(Module *M)
             for (auto i = bb->begin(); i != bb->end();)
             {
                 numInstr++;
-                auto& inst = *i;
+                auto &inst = *i;
                 i++;
-
-
 
                 if (isDead(inst))
                 {
                     inst.eraseFromParent();
                     continue;
-                } 
+                }
 
-                Value* val = simplifyInstruction(&inst,M->getDataLayout());
-                if(val) inst.replaceAllUsesWith(val);
-
-
-
+                Value *val = simplifyInstruction(&inst, M->getDataLayout());
+                if (val)
+                {
+                    inst.replaceAllUsesWith(val);
+                    CSESimplify++;
+                }
             }
         }
     }
-    printf("NUM INSTR:%d\n",numInstr);
+
+    // CSE
+
+    for (auto F = M->begin(); F != M->end(); F++)
+    {
+        for (auto BB = F->begin(); BB != F->end(); BB++)
+        {
+
+            DT = new DominatorTreeBase<BasicBlock, false>(); // make a new one
+            DT->recalculate(*F);                             // calculate for a new function F
+
+            DomTreeNodeBase<BasicBlock> *Node = DT->getNode(*BB); // get node for BB
+            for (DomTreeNodeBase<BasicBlock> **child = Node->begin(); child != Node->end(); child++)
+            {
+                // iterate over each child of BB
+                BasicBlock *bb = (*child)->getBlock();
+                for (auto dominator = BB->begin(); dominator != bb->end();dominator++)
+                {
+                    for (auto dominated = bb->begin(); dominated != bb->end();)
+                    {
+                        auto &inst = *dominated;
+                        dominated++;
+                        if(isCSE(*dominator,inst)) {
+                            //replace uses and stuff
+                            inst.replaceAllUsesWith(*dominator);
+                            inst.eraseFromParent();
+                        }
+                    }
+                }
+            }
+            delete DT;
+        }
+    }
+    printf("NUM INSTR:%d\n", numInstr);
 }
