@@ -23,8 +23,8 @@
 #include "llvm/Support/ManagedStatic.h"
 #include "llvm/Support/SourceMgr.h"
 #include "llvm/Analysis/InstructionSimplify.h"
-#include "dominance.h"
-#include "transform.h"
+// #include "dominance.h"
+// #include "transform.h"
 
 using namespace llvm;
 
