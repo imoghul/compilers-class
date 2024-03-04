@@ -32,37 +32,38 @@ static void summarize(Module *M);
 static void print_csv_file(std::string outputfile);
 
 static cl::opt<std::string>
-        InputFilename(cl::Positional, cl::desc("<input bitcode>"), cl::Required, cl::init("-"));
+    InputFilename(cl::Positional, cl::desc("<input bitcode>"), cl::Required, cl::init("-"));
 
 static cl::opt<std::string>
-        OutputFilename(cl::Positional, cl::desc("<output bitcode>"), cl::Required, cl::init("out.bc"));
+    OutputFilename(cl::Positional, cl::desc("<output bitcode>"), cl::Required, cl::init("out.bc"));
 
 static cl::opt<bool>
-        Mem2Reg("mem2reg",
-                cl::desc("Perform memory to register promotion before CSE."),
-                cl::init(false));
+    Mem2Reg("mem2reg",
+            cl::desc("Perform memory to register promotion before CSE."),
+            cl::init(false));
 
 static cl::opt<bool>
-        NoCSE("no-cse",
-              cl::desc("Do not perform CSE Optimization."),
-              cl::init(false));
+    NoCSE("no-cse",
+          cl::desc("Do not perform CSE Optimization."),
+          cl::init(false));
 
 static cl::opt<bool>
-        Verbose("verbose",
-                    cl::desc("Verbose stats."),
-                    cl::init(false));
+    Verbose("verbose",
+            cl::desc("Verbose stats."),
+            cl::init(false));
 
 static cl::opt<bool>
-        NoCheck("no",
-                cl::desc("Do not check for valid IR."),
-                cl::init(false));
+    NoCheck("no",
+            cl::desc("Do not check for valid IR."),
+            cl::init(false));
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     // Parse command line arguments
     cl::ParseCommandLineOptions(argc, argv, "llvm system compiler\n");
 
     // Handle creating output files and shutting down properly
-    llvm_shutdown_obj Y;  // Call llvm_shutdown() on exit.
+    llvm_shutdown_obj Y; // Call llvm_shutdown() on exit.
     LLVMContext Context;
 
     // LLVM idiom for constructing output file.
@@ -94,7 +95,8 @@ int main(int argc, char **argv) {
         Passes.run(*M.get());
     }
 
-    if (!NoCSE) {
+    if (!NoCSE)
+    {
         CommonSubexpressionElimination(M.get());
     }
 
@@ -125,19 +127,27 @@ static llvm::Statistic nInstructions = {"", "Instructions", "number of instructi
 static llvm::Statistic nLoads = {"", "Loads", "number of loads"};
 static llvm::Statistic nStores = {"", "Stores", "number of stores"};
 
-static void summarize(Module *M) {
-    for (auto i = M->begin(); i != M->end(); i++) {
-        if (i->begin() != i->end()) {
+static void summarize(Module *M)
+{
+    for (auto i = M->begin(); i != M->end(); i++)
+    {
+        if (i->begin() != i->end())
+        {
             nFunctions++;
         }
 
-        for (auto j = i->begin(); j != i->end(); j++) {
-            for (auto k = j->begin(); k != j->end(); k++) {
+        for (auto j = i->begin(); j != i->end(); j++)
+        {
+            for (auto k = j->begin(); k != j->end(); k++)
+            {
                 Instruction &I = *k;
                 nInstructions++;
-                if (isa<LoadInst>(&I)) {
+                if (isa<LoadInst>(&I))
+                {
                     nLoads++;
-                } else if (isa<StoreInst>(&I)) {
+                }
+                else if (isa<StoreInst>(&I))
+                {
                     nStores++;
                 }
             }
@@ -149,7 +159,8 @@ static void print_csv_file(std::string outputfile)
 {
     std::ofstream stats(outputfile + ".stats");
     auto a = GetStatistics();
-    for (auto p : a) {
+    for (auto p : a)
+    {
         stats << p.first.str() << "," << p.second << std::endl;
     }
     stats.close();
@@ -162,7 +173,104 @@ static llvm::Statistic CSELdElim = {"", "CSELdElim", "CSE redundant loads"};
 static llvm::Statistic CSEStore2Load = {"", "CSEStore2Load", "CSE forwarded store to load"};
 static llvm::Statistic CSEStElim = {"", "CSEStElim", "CSE redundant stores"};
 
-static void CommonSubexpressionElimination(Module *) {
+static void CommonSubexpressionElimination(Module *)
+{
     // Implement this function
+
+    for (auto f = M->begin(); f != M->end(); f++)
+    {
+        for (auto bb = f->begin(); bb != f->end(); bb++)
+        {
+            for (auto i = bb->begin(); i != bb->end(); i++)
+            {
+                for (BasicBlock::iterator bit = bb.begin(); bit != bb.end();)
+                {
+                    Instruction &I = *bit;
+                    if (isDead(&I)){
+                        I.eraseFromParent();
+                    }
+                    else
+                        bit++
+                }
+            }
+        }
+    }
 }
 
+bool isDead(Instruction &I)
+{
+
+    int opcode = I.getOpcode();
+    switch (opcode)
+    {
+    case Instruction::Add:
+    case Instruction::FNeg:
+    case Instruction::FAdd:
+    case Instruction::Sub:
+    case Instruction::FSub:
+    case Instruction::Mul:
+    case Instruction::FMul:
+    case Instruction::UDiv:
+    case Instruction::SDiv:
+    case Instruction::FDiv:
+    case Instruction::URem:
+    case Instruction::SRem:
+    case Instruction::FRem:
+    case Instruction::Shl:
+    case Instruction::LShr:
+    case Instruction::AShr:
+    case Instruction::And:
+    case Instruction::Or:
+    case Instruction::Xor:
+    case Instruction::Alloca:
+    case Instruction::GetElementPtr:
+    case Instruction::Trunc:
+    case Instruction::ZExt:
+    case Instruction::SExt:
+    case Instruction::FPToUI:
+    case Instruction::FPToSI:
+    case Instruction::UIToFP:
+    case Instruction::SIToFP:
+    case Instruction::FPTrunc:
+    case Instruction::FPExt:
+    case Instruction::PtrToInt:
+    case Instruction::IntToPtr:
+    case Instruction::BitCast:
+    case Instruction::AddrSpaceCast:
+    case Instruction::ICmp:
+    case Instruction::FCmp:
+    case Instruction::PHI:
+    case Instruction::Select:
+    case Instruction::ExtractElement:
+    case Instruction::InsertElement:
+    case Instruction::ShuffleVector:
+    case Instruction::ExtractValue:
+    case Instruction::InsertValue:
+        if (I.use_begin() == I.use_end())
+        {
+            return true;
+        }
+        break;
+
+    case Instruction::Load:
+    {
+        LoadInst *li = dyn_cast<LoadInst>(&I);
+        if (li && li->isVolatile())
+            return false;
+        if (I.use_begin() == I.use_end())
+            return true;
+        break;
+    }
+
+    default:
+        // any other opcode fails
+        return false;
+    }
+
+    if (I.use_begin() == I.use_end())
+    {
+        return true; // dead, but this is not enough
+    }
+
+    return 0;
+}
