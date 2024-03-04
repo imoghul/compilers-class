@@ -264,10 +264,20 @@ static void CommonSubexpressionElimination(Module *M)
                 numInstr++;
                 auto& inst = *i;
                 i++;
+
+
+
                 if (isDead(inst))
                 {
-                    // inst.eraseFromParent();
+                    inst.eraseFromParent();
+                    continue;
                 } 
+
+                Value* val = simplifyInstruction(&inst,M->getDataLayout());
+                if(val) inst.replaceAllUsesWith(val);
+
+
+
             }
         }
     }
