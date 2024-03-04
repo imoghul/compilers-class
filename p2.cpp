@@ -265,7 +265,7 @@ static void CommonSubexpressionElimination(Module *M)
                 i++;
                 if (isDead(inst))
                 {
-                    isnt.eraseFromParent();
+                    inst.eraseFromParent();
                 } 
             }
         }
