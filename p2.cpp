@@ -26,6 +26,88 @@
 
 using namespace llvm;
 
+
+
+bool isDead(Instruction &I)
+{
+
+    int opcode = I.getOpcode();
+    switch (opcode)
+    {
+    case Instruction::Add:
+    case Instruction::FNeg:
+    case Instruction::FAdd:
+    case Instruction::Sub:
+    case Instruction::FSub:
+    case Instruction::Mul:
+    case Instruction::FMul:
+    case Instruction::UDiv:
+    case Instruction::SDiv:
+    case Instruction::FDiv:
+    case Instruction::URem:
+    case Instruction::SRem:
+    case Instruction::FRem:
+    case Instruction::Shl:
+    case Instruction::LShr:
+    case Instruction::AShr:
+    case Instruction::And:
+    case Instruction::Or:
+    case Instruction::Xor:
+    case Instruction::Alloca:
+    case Instruction::GetElementPtr:
+    case Instruction::Trunc:
+    case Instruction::ZExt:
+    case Instruction::SExt:
+    case Instruction::FPToUI:
+    case Instruction::FPToSI:
+    case Instruction::UIToFP:
+    case Instruction::SIToFP:
+    case Instruction::FPTrunc:
+    case Instruction::FPExt:
+    case Instruction::PtrToInt:
+    case Instruction::IntToPtr:
+    case Instruction::BitCast:
+    case Instruction::AddrSpaceCast:
+    case Instruction::ICmp:
+    case Instruction::FCmp:
+    case Instruction::PHI:
+    case Instruction::Select:
+    case Instruction::ExtractElement:
+    case Instruction::InsertElement:
+    case Instruction::ShuffleVector:
+    case Instruction::ExtractValue:
+    case Instruction::InsertValue:
+        if (I.use_begin() == I.use_end())
+        {
+            return true;
+        }
+        break;
+
+    case Instruction::Load:
+    {
+        LoadInst *li = dyn_cast<LoadInst>(&I);
+        if (li && li->isVolatile())
+            return false;
+        if (I.use_begin() == I.use_end())
+            return true;
+        break;
+    }
+
+    default:
+        // any other opcode fails
+        return false;
+    }
+
+    if (I.use_begin() == I.use_end())
+    {
+        return true; // dead, but this is not enough
+    }
+
+    return 0;
+}
+
+
+
 static void CommonSubexpressionElimination(Module *);
 
 static void summarize(Module *M);
@@ -190,87 +272,9 @@ static void CommonSubexpressionElimination(Module *)
                         I.eraseFromParent();
                     }
                     else
-                        bit++
+                        bit++;
                 }
             }
         }
     }
-}
-
-bool isDead(Instruction &I)
-{
-
-    int opcode = I.getOpcode();
-    switch (opcode)
-    {
-    case Instruction::Add:
-    case Instruction::FNeg:
-    case Instruction::FAdd:
-    case Instruction::Sub:
-    case Instruction::FSub:
-    case Instruction::Mul:
-    case Instruction::FMul:
-    case Instruction::UDiv:
-    case Instruction::SDiv:
-    case Instruction::FDiv:
-    case Instruction::URem:
-    case Instruction::SRem:
-    case Instruction::FRem:
-    case Instruction::Shl:
-    case Instruction::LShr:
-    case Instruction::AShr:
-    case Instruction::And:
-    case Instruction::Or:
-    case Instruction::Xor:
-    case Instruction::Alloca:
-    case Instruction::GetElementPtr:
-    case Instruction::Trunc:
-    case Instruction::ZExt:
-    case Instruction::SExt:
-    case Instruction::FPToUI:
-    case Instruction::FPToSI:
-    case Instruction::UIToFP:
-    case Instruction::SIToFP:
-    case Instruction::FPTrunc:
-    case Instruction::FPExt:
-    case Instruction::PtrToInt:
-    case Instruction::IntToPtr:
-    case Instruction::BitCast:
-    case Instruction::AddrSpaceCast:
-    case Instruction::ICmp:
-    case Instruction::FCmp:
-    case Instruction::PHI:
-    case Instruction::Select:
-    case Instruction::ExtractElement:
-    case Instruction::InsertElement:
-    case Instruction::ShuffleVector:
-    case Instruction::ExtractValue:
-    case Instruction::InsertValue:
-        if (I.use_begin() == I.use_end())
-        {
-            return true;
-        }
-        break;
-
-    case Instruction::Load:
-    {
-        LoadInst *li = dyn_cast<LoadInst>(&I);
-        if (li && li->isVolatile())
-            return false;
-        if (I.use_begin() == I.use_end())
-            return true;
-        break;
-    }
-
-    default:
-        // any other opcode fails
-        return false;
-    }
-
-    if (I.use_begin() == I.use_end())
-    {
-        return true; // dead, but this is not enough
-    }
-
-    return 0;
 }
