@@ -301,7 +301,7 @@ static void CommonSubexpressionElimination(Module *M)
         for (auto BB = F->begin(); BB != F->end(); BB++)
         {
 
-            DT = new DominatorTreeBase<BasicBlock, false>(); // make a new one
+            auto DT = new DominatorTreeBase<BasicBlock, false>(); // make a new one
             DT->recalculate(*F);                             // calculate for a new function F
 
             DomTreeNodeBase<BasicBlock> *Node = DT->getNode(*BB); // get node for BB
@@ -317,7 +317,7 @@ static void CommonSubexpressionElimination(Module *M)
                         dominated++;
                         if(isCSE(*dominator,inst)) {
                             //replace uses and stuff
-                            inst.replaceAllUsesWith(*dominator);
+                            inst.replaceAllUsesWith(dominator->getValue());
                             inst.eraseFromParent();
                         }
                     }
