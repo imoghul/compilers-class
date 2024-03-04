@@ -254,13 +254,14 @@ static llvm::Statistic CSEStElim = {"", "CSEStElim", "CSE redundant stores"};
 static void CommonSubexpressionElimination(Module *M)
 {
     // Implement this function
-
+    int numInstr = 0;
     for (auto f = M->begin(); f != M->end(); f++)
     {
         for (auto bb = f->begin(); bb != f->end(); bb++)
         {
             for (auto i = bb->begin(); i != bb->end();)
             {
+                numInstr++;
                 auto& inst = *i;
                 i++;
                 if (isDead(inst))
@@ -270,4 +271,5 @@ static void CommonSubexpressionElimination(Module *M)
             }
         }
     }
+    printf("NUM INSTR:%d\n",numInstr);
 }
