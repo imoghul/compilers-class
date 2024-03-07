@@ -263,25 +263,38 @@ static bool isCSE(Instruction &i1, Instruction &i2)
     return false;
 }
 
-static int cseSupports(Value *I)
+static int cseSupports(Instruction *I)
 {
-    return !(LLVMIsALoadInst(I) ||
-             LLVMIsAStoreInst(I) ||
-             LLVMIsAPHINode(I) ||
-             LLVMIsACallInst(I) ||
-             LLVMIsAAllocaInst(I) ||
-             LLVMIsAFCmpInst(I) ||
-             LLVMIsATerminatorInst(I) ||
-             LLVMIsAVAArgInst(I) ||
-             LLVMIsAExtractValueInst(I));
+    // return !(LLVMIsALoadInst(I) ||
+    //          LLVMIsAStoreInst(I) ||
+    //          LLVMIsAPHINode(I) ||
+    //          LLVMIsACallInst(I) ||
+    //          LLVMIsAAllocaInst(I) ||
+    //          LLVMIsAFCmpInst(I) ||
+    //          LLVMIsATerminatorInst(I) ||
+    //          LLVMIsAVAArgInst(I) ||
+    //          LLVMIsAExtractValueInst(I));
+
+    int opcode = I.getOpcode();
+    switch (opcode)
+    {
+
+        case Instruction::Load:
+        case Instruciton::Store:
+        //TODO: add rest
+        return false;
+
+    }
+    return true;
+
 }
 
 static void doCSE(BasicBlock *BB, Value* I)
 {
-    if (!cseSupports(I))
+    if (!cseSupports((Instruction*)I))
         return;
 
-    for(auto i = BB->begin();i!=BB->end;++i); // points to each instruction
+    for(auto i = BB->begin();i!=BB->end();++i); // points to each instruction
     {
         if (isCSE(*I, i))
         {
