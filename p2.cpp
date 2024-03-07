@@ -381,7 +381,7 @@ static void CommonSubexpressionElimination(Module *M)
                 DomTreeNodeBase<BasicBlock> *Node = DT->getNode(&*BB); // get node for BB
                 for (DomTreeNodeBase<BasicBlock> **child = Node->begin(); child != Node->end(); child++)
                 {
-                    doCSE((*child)->getBlock(), *i);
+                    doCSE((*child)->getBlock(), &(*i));
                 }
                 
                 delete DT;
