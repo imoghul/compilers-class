@@ -295,16 +295,13 @@ static void doCSE(BasicBlock *BB, Value *I)
     for (auto i = BB->begin(); i != BB->end(); ++i)
         ; // points to each instruction
     {
-        if (isCSE(*I, **i))
+        auto &inst = *i;
+        i++;
+        if (isCSE(*((Instruction*)I), *((Instruction*)*i)))
         {
-            auto &inst = *i;
-            i++;
-            if (isCSE(*i, inst))
-            {
-                // replace uses and stuff
-                inst.replaceAllUsesWith(I);
-                inst.eraseFromParent();
-            }
+            // replace uses and stuff
+            inst.replaceAllUsesWith(I);
+            inst.eraseFromParent();
         }
     }
 
@@ -396,4 +393,3 @@ static void CommonSubexpressionElimination(Module *M)
     }
     printf("NUM INSTR:%d\n", numInstr);
 }
-
