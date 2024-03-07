@@ -279,22 +279,21 @@ static int cseSupports(Instruction *I)
     switch (opcode)
     {
 
-        case Instruction::Load:
-        case Instruction::Store:
-        //TODO: add rest
+    case Instruction::Load:
+    case Instruction::Store:
+        // TODO: add rest
         return false;
-
     }
     return true;
-
 }
 
-static void doCSE(BasicBlock *BB, Value* I)
+static void doCSE(BasicBlock *BB, Value *I)
 {
-    if (!cseSupports((Instruction*)I))
+    if (!cseSupports((Instruction *)I))
         return;
 
-    for(auto i = BB->begin();i!=BB->end();++i); // points to each instruction
+    for (auto i = BB->begin(); i != BB->end(); ++i)
+        ; // points to each instruction
     {
         if (isCSE(*I, i))
         {
@@ -315,7 +314,7 @@ static void doCSE(BasicBlock *BB, Value* I)
     DomTreeNodeBase<BasicBlock> *Node = DT->getNode(&*BB); // get node for BB
 
     for (DomTreeNodeBase<BasicBlock> **child = Node->begin(); child != Node->end(); child++)
-            {
+    {
         processInst((*child)->getBlock(), I);
     }
 }
@@ -360,42 +359,41 @@ static void CommonSubexpressionElimination(Module *M)
         for (auto BB = F->begin(); BB != F->end(); BB++)
         {
 
-                
-                for (auto i = BB->begin(); i != BB->end(); i++)
+            for (auto i = BB->begin(); i != BB->end(); i++)
+            {
+                for (auto j = i; j != BB->end();)
                 {
-                    for (auto j = i; j != BB->end();)
+                    if (&(*i) == &(*j))
+                        continue;
+
+                    auto &inst = *j;
+                    j++;
+                    if (isCSE(*i, inst))
                     {
-                        if(&(*i) == &(*j)) continue;
-
-                        auto &inst = *j;
-                        j++;
-                        if (isCSE(*i, inst))
-                        {
-                            // replace uses and stuff
-                            inst.replaceAllUsesWith((Value *)(&(*i)));
-                            inst.eraseFromParent();
-                        }
-                        break;
+                        // replace uses and stuff
+                        inst.replaceAllUsesWith((Value *)(&(*i)));
+                        inst.eraseFromParent();
                     }
-
-                    // iterate over each child of BB
-                    BasicBlock *bb = (*child)->getBlock();
-                    auto DT = new DominatorTreeBase<BasicBlock, false>(); // make a new one
-                    DT->recalculate(*F);                                  // calculate for a new function F
-
-                    DomTreeNodeBase<BasicBlock> *Node = DT->getNode(&*BB); // get node for BB
-                    for (DomTreeNodeBase<BasicBlock> **child = Node->begin(); child != Node->end(); child++)
-                    {    
-                        doCSE((*child)->getBlock(),*i);
-                    }
-
-
                     break;
                 }
+
+                // iterate over each child of BB
+                BasicBlock *bb = (*child)->getBlock();
+                auto DT = new DominatorTreeBase<BasicBlock, false>(); // make a new one
+                DT->recalculate(*F);                                  // calculate for a new function F
+
+                DomTreeNodeBase<BasicBlock> *Node = DT->getNode(&*BB); // get node for BB
+                for (DomTreeNodeBase<BasicBlock> **child = Node->begin(); child != Node->end(); child++)
+                {
+                    doCSE((*child)->getBlock(), *i);
+                }
+
                 break;
             }
-            delete DT;
+            break;
         }
+        delete DT;
     }
     printf("NUM INSTR:%d\n", numInstr);
 }
+
