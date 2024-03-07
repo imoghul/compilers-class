@@ -259,9 +259,26 @@ static bool isCSE(Instruction &i1, Instruction &i2)
         return false;
     if (i1.getOpcode() == Instruction::Load || i1.getOpcode() == Instruction::Store)
         return false;
-    
+
     return false;
 }
+
+static int cseSupports(LLVMValueRef I)
+{
+    return !(LLVMIsALoadInst(I) ||
+             LLVMIsAStoreInst(I) ||
+             LLVMIsAPHINode(I) ||
+             LLVMIsACallInst(I) ||
+             LLVMIsAAllocaInst(I) ||
+             LLVMIsAFCmpInst(I) ||
+             LLVMIsATerminatorInst(I) ||
+             LLVMIsAVAArgInst(I) ||
+             LLVMIsAExtractValueInst(I));
+}
+
+static void doCSE(LLVMBasicBlockRef BB, LLVMValueRef I, int flag){
+    if(!cseSupports(I)) return;
+} 
 
 static void CommonSubexpressionElimination(Module *M)
 {
@@ -304,22 +321,23 @@ static void CommonSubexpressionElimination(Module *M)
         {
 
             auto DT = new DominatorTreeBase<BasicBlock, false>(); // make a new one
-            DT->recalculate(*F);                             // calculate for a new function F
+            DT->recalculate(*F);                                  // calculate for a new function F
 
             DomTreeNodeBase<BasicBlock> *Node = DT->getNode(&*BB); // get node for BB
             for (DomTreeNodeBase<BasicBlock> **child = Node->begin(); child != Node->end(); child++)
             {
                 // iterate over each child of BB
                 BasicBlock *bb = (*child)->getBlock();
-                for (auto dominator = BB->begin(); dominator != bb->end();dominator++)
+                for (auto dominator = BB->begin(); dominator != bb->end(); dominator++)
                 {
                     for (auto dominated = bb->begin(); dominated != bb->end();)
                     {
                         auto &inst = *dominated;
                         dominated++;
-                        if(isCSE(*dominator,inst)) {
-                            //replace uses and stuff
-                            inst.replaceAllUsesWith(dominator->getValue());
+                        if (isCSE(*dominator, inst))
+                        {
+                            // replace uses and stuff
+                            inst.replaceAllUsesWith(dominator->getDest());
                             inst.eraseFromParent();
                         }
                     }
