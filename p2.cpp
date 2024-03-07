@@ -287,7 +287,7 @@ static int cseSupports(Instruction *I)
     return true;
 }
 
-static void doCSE(BasicBlock *BB, Value *I)
+static void doCSE(BasicBlock *BB, Instruction *I)
 {
     if (!cseSupports((Instruction *)I))
         return;
@@ -296,7 +296,7 @@ static void doCSE(BasicBlock *BB, Value *I)
     {
         auto &inst = *i;
         i++;
-        if (isCSE(*((Instruction*)I), *((Instruction*)*i)))
+        if (isCSE(*((Instruction*)I), (*i)))
         {
             // replace uses and stuff
             inst.replaceAllUsesWith(I);
@@ -311,7 +311,7 @@ static void doCSE(BasicBlock *BB, Value *I)
 
     for (DomTreeNodeBase<BasicBlock> **child = Node->begin(); child != Node->end(); child++)
     {
-        processInst((*child)->getBlock(), I);
+        doCSE((*child)->getBlock(), I);
     }
 }
 
@@ -383,12 +383,12 @@ static void CommonSubexpressionElimination(Module *M)
                 {
                     doCSE((*child)->getBlock(), *i);
                 }
-
+                
+                delete DT;
                 break;
             }
             break;
         }
-        delete DT;
     }
     printf("NUM INSTR:%d\n", numInstr);
 }
