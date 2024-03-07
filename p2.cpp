@@ -275,12 +275,12 @@ static int cseSupports(Instruction *I)
     //          LLVMIsAVAArgInst(I) ||
     //          LLVMIsAExtractValueInst(I));
 
-    int opcode = I.getOpcode();
+    int opcode = I->getOpcode();
     switch (opcode)
     {
 
         case Instruction::Load:
-        case Instruciton::Store:
+        case Instruction::Store:
         //TODO: add rest
         return false;
 
