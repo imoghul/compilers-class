@@ -292,8 +292,7 @@ static void doCSE(BasicBlock *BB, Value *I)
     if (!cseSupports((Instruction *)I))
         return;
 
-    for (auto i = BB->begin(); i != BB->end(); ++i)
-        ; // points to each instruction
+    for (auto i = BB->begin(); i != BB->end())
     {
         auto &inst = *i;
         i++;
