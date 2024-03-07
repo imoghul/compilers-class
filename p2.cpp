@@ -295,7 +295,7 @@ static void doCSE(BasicBlock *BB, Value *I)
     for (auto i = BB->begin(); i != BB->end(); ++i)
         ; // points to each instruction
     {
-        if (isCSE(*I, i))
+        if (isCSE(*I, **i))
         {
             auto &inst = *i;
             i++;
