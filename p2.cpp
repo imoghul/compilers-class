@@ -287,7 +287,7 @@ static int cseSupports(Instruction *I)
     return true;
 }
 
-static void doCSE(BasicBlock *BB, Instruction *I)
+static void doCSE(Function& F , BasicBlock *BB, Instruction *I)
 {
     if (!cseSupports((Instruction *)I))
         return;
@@ -311,7 +311,7 @@ static void doCSE(BasicBlock *BB, Instruction *I)
 
     for (DomTreeNodeBase<BasicBlock> **child = Node->begin(); child != Node->end(); child++)
     {
-        doCSE((*child)->getBlock(), I);
+        doCSE(F,(*child)->getBlock(), I);
     }
 }
 
@@ -374,14 +374,13 @@ static void CommonSubexpressionElimination(Module *M)
                 }
 
                 // iterate over each child of BB
-                BasicBlock *bb = (*child)->getBlock();
                 auto DT = new DominatorTreeBase<BasicBlock, false>(); // make a new one
                 DT->recalculate(*F);                                  // calculate for a new function F
 
                 DomTreeNodeBase<BasicBlock> *Node = DT->getNode(&*BB); // get node for BB
                 for (DomTreeNodeBase<BasicBlock> **child = Node->begin(); child != Node->end(); child++)
                 {
-                    doCSE((*child)->getBlock(), &(*i));
+                    doCSE(F,(*child)->getBlock(), &(*i));
                 }
                 
                 delete DT;
