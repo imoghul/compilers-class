@@ -388,6 +388,7 @@ static void CommonSubexpressionElimination(Module *M)
             }
             break;
         }
+        break;
     }
     printf("NUM INSTR:%d\n", numInstr);
 }
