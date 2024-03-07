@@ -287,7 +287,7 @@ static int cseSupports(Instruction *I)
     return true;
 }
 
-static void doCSE(Function& F , BasicBlock *BB, Instruction *I)
+static void doCSE(Function* F , BasicBlock *BB, Instruction *I)
 {
     if (!cseSupports((Instruction *)I))
         return;
