@@ -337,7 +337,7 @@ static void CommonSubexpressionElimination(Module *M)
                         if (isCSE(*dominator, inst))
                         {
                             // replace uses and stuff
-                            inst.replaceAllUsesWith(dominator->getDestination());
+                            inst.replaceAllUsesWith((Value*)&(*dominator));
                             inst.eraseFromParent();
                         }
                     }
