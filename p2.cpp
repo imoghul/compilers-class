@@ -340,8 +340,11 @@ static void CommonSubexpressionElimination(Module *M)
                             inst.replaceAllUsesWith((Value*)&(*dominator));
                             inst.eraseFromParent();
                         }
+                        break;
                     }
+                    break;
                 }
+                break;
             }
             delete DT;
         }
