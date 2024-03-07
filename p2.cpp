@@ -263,7 +263,7 @@ static bool isCSE(Instruction &i1, Instruction &i2)
     return false;
 }
 
-static int cseSupports(LLVMValueRef I)
+static int cseSupports(Value *I)
 {
     return !(LLVMIsALoadInst(I) ||
              LLVMIsAStoreInst(I) ||
@@ -276,9 +276,36 @@ static int cseSupports(LLVMValueRef I)
              LLVMIsAExtractValueInst(I));
 }
 
-static void doCSE(LLVMBasicBlockRef BB, LLVMValueRef I, int flag){
-    if(!cseSupports(I)) return;
-} 
+static void doCSE(BasicBlock *BB, Value* I)
+{
+    if (!cseSupports(I))
+        return;
+
+    for(auto i = BB->begin();i!=BB->end;++i); // points to each instruction
+    {
+        if (isCSE(*I, i))
+        {
+            auto &inst = *i;
+            i++;
+            if (isCSE(*i, inst))
+            {
+                // replace uses and stuff
+                inst.replaceAllUsesWith(I);
+                inst.eraseFromParent();
+            }
+        }
+    }
+
+    auto DT = new DominatorTreeBase<BasicBlock, false>(); // make a new one
+    DT->recalculate(*F);                                  // calculate for a new function F
+
+    DomTreeNodeBase<BasicBlock> *Node = DT->getNode(&*BB); // get node for BB
+
+    for (DomTreeNodeBase<BasicBlock> **child = Node->begin(); child != Node->end(); child++)
+            {
+        processInst((*child)->getBlock(), I);
+    }
+}
 
 static void CommonSubexpressionElimination(Module *M)
 {
@@ -320,28 +347,36 @@ static void CommonSubexpressionElimination(Module *M)
         for (auto BB = F->begin(); BB != F->end(); BB++)
         {
 
-            auto DT = new DominatorTreeBase<BasicBlock, false>(); // make a new one
-            DT->recalculate(*F);                                  // calculate for a new function F
-
-            DomTreeNodeBase<BasicBlock> *Node = DT->getNode(&*BB); // get node for BB
-            for (DomTreeNodeBase<BasicBlock> **child = Node->begin(); child != Node->end(); child++)
-            {
-                // iterate over each child of BB
-                BasicBlock *bb = (*child)->getBlock();
-                for (auto dominator = BB->begin(); dominator != bb->end(); dominator++)
+                
+                for (auto i = BB->begin(); i != BB->end(); i++)
                 {
-                    for (auto dominated = bb->begin(); dominated != bb->end();)
+                    for (auto j = i; j != BB->end();)
                     {
-                        auto &inst = *dominated;
-                        dominated++;
-                        if (isCSE(*dominator, inst))
+                        if(&(*i) == &(*j)) continue;
+
+                        auto &inst = *j;
+                        j++;
+                        if (isCSE(*i, inst))
                         {
                             // replace uses and stuff
-                            inst.replaceAllUsesWith((Value*)&(*dominator));
+                            inst.replaceAllUsesWith((Value *)(&(*i)));
                             inst.eraseFromParent();
                         }
                         break;
                     }
+
+                    // iterate over each child of BB
+                    BasicBlock *bb = (*child)->getBlock();
+                    auto DT = new DominatorTreeBase<BasicBlock, false>(); // make a new one
+                    DT->recalculate(*F);                                  // calculate for a new function F
+
+                    DomTreeNodeBase<BasicBlock> *Node = DT->getNode(&*BB); // get node for BB
+                    for (DomTreeNodeBase<BasicBlock> **child = Node->begin(); child != Node->end(); child++)
+                    {    
+                        doCSE((*child)->getBlock(),*i);
+                    }
+
+
                     break;
                 }
                 break;
