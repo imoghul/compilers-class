@@ -26,6 +26,9 @@
 // #include "dominance.h"
 // #include "transform.h"
 
+
+int CSESimplify = 0, CSEDead = 0, CSEBasic = 0, CSERLoad = 0, CSERStore = 0;
+
 using namespace llvm;
 
 bool isDead(Instruction &I)
@@ -323,7 +326,6 @@ static void CommonSubexpressionElimination(Module *M)
 
     // Optimization 0&1
     int numInstr = 0;
-    int CSESimplify = 0;
     for (auto f = M->begin(); f != M->end(); f++)
     {
         for (auto bb = f->begin(); bb != f->end(); bb++)
@@ -337,6 +339,7 @@ static void CommonSubexpressionElimination(Module *M)
                 if (isDead(inst))
                 {
                     inst.eraseFromParent();
+                    CSEDead++;
                     continue;
                 }
 
@@ -420,7 +423,7 @@ static void CommonSubexpressionElimination(Module *M)
                         j++;
                         if (inst.getOpcode() == Instruction::Load && !inst.isVolatile() && i->getAccessType() == inst.getAccessType() && i->getOperand(0) == inst.getOperand(0))
                         {
-
+                            CSERLoad++;
                             inst.replaceAllUsesWith((Value *)(&(*i)));
                             inst.eraseFromParent();
                         }
@@ -432,6 +435,4 @@ static void CommonSubexpressionElimination(Module *M)
             }
         }
     }
-
-    printf("NUM INSTR:%d\n", numInstr);
 }
