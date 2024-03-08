@@ -403,13 +403,13 @@ static void CommonSubexpressionElimination(Module *M)
 
             for (auto i = BB->begin(); i != BB->end(); i++)
             {
-                return;
                 if(i->getOpcode()==Instruction::Load){
                     auto j = i;
                     if(j==BB->end()) break;
                     j++;
                     if(j==BB->end()) break;
                     auto& inst = *j;
+                    if(!&inst) break;
                     for(;j!=BB->end();){
                         if(inst.getOpcode()==Instruction::Load && ! inst.isVolatile() && inst.getAccessType() == inst.getAccessType() && inst.getOperand(0) == inst.getOperand(0)){
                             
