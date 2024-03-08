@@ -416,6 +416,8 @@ static void CommonSubexpressionElimination(Module *M)
                         break;
                     for (; j != BB->end();)
                     {
+                        inst = *j;
+                        j++;
                         if (inst.getOpcode() == Instruction::Load && !inst.isVolatile() && i->getAccessType() == inst.getAccessType() && i->getOperand(0) == inst.getOperand(0))
                         {
 
@@ -424,7 +426,7 @@ static void CommonSubexpressionElimination(Module *M)
                         }
                         if (inst.getOpcode() == Instruction::Store)
                             break;
-                        j++;
+                        
                     }
                 }
             }
