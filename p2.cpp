@@ -297,7 +297,6 @@ static void doCSE(Function *F, BasicBlock *BB, Instruction *I, int depth)
     {
         Instruction &inst = *i;
         i++;
-        printf("%d\n", inst.getOpcode());
         if (isCSE(*((Instruction *)I), (*i)))
         {
             // replace uses and stuff
@@ -408,9 +407,12 @@ static void CommonSubexpressionElimination(Module *M)
                     auto j = i;
                     j++;
                     for(;j!=BB->end();){
-                        if(j->getOpcode()==Instruction::Load){
-                            
+                        if(j->getOpcode()==Instruction::Load && ! j->isVolatile() && i->getAccessType() == j->getAccessType() && i->getOperand(0) == j->getOperand(0)){
+                            auto& inst = *j;
+                            inst.replaceAllUsesWith((Value *)(&(i)));
+                            inst.eraseFromParent();
                         }
+                        if(j->getOpcode()==Instruction::Store)break;
                         ++j;
                     }
                 }
