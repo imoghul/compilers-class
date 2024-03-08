@@ -304,7 +304,7 @@ static void doCSE(Function* F , BasicBlock *BB, Instruction *I, int depth)
             inst.replaceAllUsesWith(I);
             inst.eraseFromParent();
         }
-        breka;
+        break;
     }
 
     auto DT = new DominatorTreeBase<BasicBlock, false>(); // make a new one
