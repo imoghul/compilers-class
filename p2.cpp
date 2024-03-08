@@ -420,7 +420,7 @@ static void CommonSubexpressionElimination(Module *M)
                         {
 
                             inst.replaceAllUsesWith((Value *)(&(*i)));
-                            // inst.eraseFromParent();
+                            inst.eraseFromParent();
                         }
                         if (inst.getOpcode() == Instruction::Store)
                             break;
