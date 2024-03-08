@@ -416,14 +416,14 @@ static void CommonSubexpressionElimination(Module *M)
                         break;
                     for (; j != BB->end();)
                     {
-                        if (inst.getOpcode() == Instruction::Load && !inst.isVolatile() && i->getAccessType() == inst.getAccessType() && i->getOperand(0) == inst.getOperand(0))
-                        {
+                        // if (inst.getOpcode() == Instruction::Load && !inst.isVolatile() && i->getAccessType() == inst.getAccessType() && i->getOperand(0) == inst.getOperand(0))
+                        // {
 
-                            inst.replaceAllUsesWith((Value *)(&(i)));
-                            inst.eraseFromParent();
-                        }
-                        if (inst.getOpcode() == Instruction::Store)
-                            break;
+                        //     inst.replaceAllUsesWith((Value *)(&(i)));
+                        //     inst.eraseFromParent();
+                        // }
+                        // if (inst.getOpcode() == Instruction::Store)
+                        //     break;
                         ++j;
                     }
                 }
