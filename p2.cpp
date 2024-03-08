@@ -403,6 +403,7 @@ static void CommonSubexpressionElimination(Module *M)
 
             for (auto i = BB->begin(); i != BB->end(); i++)
             {
+                return;
                 if(i->getOpcode()==Instruction::Load){
                     auto j = i;
                     if(j==BB->end()) break;
