@@ -411,12 +411,12 @@ static void CommonSubexpressionElimination(Module *M)
                     j++;
                     if (j == BB->end())
                         break;
-                    auto &inst = *j;
+                    auto& inst = *j;
                     if (!&inst)
                         break;
                     for (; j != BB->end();)
                     {
-                        inst = *j;
+                        auto& inst = *j;
                         j++;
                         if (inst.getOpcode() == Instruction::Load && !inst.isVolatile() && i->getAccessType() == inst.getAccessType() && i->getOperand(0) == inst.getOperand(0))
                         {
