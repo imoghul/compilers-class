@@ -28,6 +28,16 @@
 
 using namespace llvm;
 
+use llvm_sys::core::{
+    LLVMGetAlignment, LLVMGetAllocatedType, LLVMGetFCmpPredicate, LLVMGetICmpPredicate, LLVMGetInstructionOpcode,
+    LLVMGetInstructionParent, LLVMGetMetadata, LLVMGetNextInstruction, LLVMGetNumOperands, LLVMGetOperand,
+    LLVMGetOperandUse, LLVMGetPreviousInstruction, LLVMGetVolatile, LLVMHasMetadata, LLVMInstructionClone,
+    LLVMInstructionEraseFromParent, LLVMInstructionRemoveFromParent, LLVMIsAAllocaInst, LLVMIsABasicBlock,
+    LLVMIsALoadInst, LLVMIsAStoreInst, LLVMIsATerminatorInst, LLVMIsConditional, LLVMIsTailCall, LLVMSetAlignment,
+    LLVMSetMetadata, LLVMSetOperand, LLVMSetVolatile, LLVMValueAsBasicBlock,
+};
+
+
 bool isDead(Instruction &I)
 {
 
@@ -265,26 +275,26 @@ static bool isCSE(Instruction &i1, Instruction &i2)
 
 static int cseSupports(Instruction *I)
 {
-    // return !(LLVMIsALoadInst(I) ||
-    //          LLVMIsAStoreInst(I) ||
-    //          LLVMIsAPHINode(I) ||
-    //          LLVMIsACallInst(I) ||
-    //          LLVMIsAAllocaInst(I) ||
-    //          LLVMIsAFCmpInst(I) ||
-    //          LLVMIsATerminatorInst(I) ||
-    //          LLVMIsAVAArgInst(I) ||
-    //          LLVMIsAExtractValueInst(I));
+    return !(LLVMIsALoadInst(I->as_value_ref()) ||
+             LLVMIsAStoreInst(I->as_value_ref()) ||
+             LLVMIsAPHINode(I->as_value_ref()) ||
+             LLVMIsACallInst(I->as_value_ref()) ||
+             LLVMIsAAllocaInst(I->as_value_ref()) ||
+             LLVMIsAFCmpInst(I->as_value_ref()) ||
+             LLVMIsATerminatorInst(I->as_value_ref()) ||
+             LLVMIsAVAArgInst(I->as_value_ref()) ||
+             LLVMIsAExtractValueInst(I->as_value_ref()));
 
-    int opcode = I->getOpcode();
-    switch (opcode)
-    {
+    // int opcode = I->getOpcode();
+    // switch (opcode)
+    // {
 
-    case Instruction::Load:
-    case Instruction::Store:
-        // TODO: add rest
-        return false;
-    }
-    return true;
+    // case Instruction::Load:
+    // case Instruction::Store:
+    //     // TODO: add rest
+    //     return false;
+    // }
+    // return true;
 }
 
 static void doCSE(Function* F , BasicBlock *BB, Instruction *I)
