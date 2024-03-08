@@ -294,8 +294,9 @@ static void doCSE(Function* F , BasicBlock *BB, Instruction *I)
 
     for (auto i = BB->begin(); i != BB->end();)
     {
-        auto &inst = *i;
+        Instruction &inst = *i;
         i++;
+        printf("%d\n",inst.getOpcode());
         if (isCSE(*((Instruction*)I), (*i)))
         {
             // replace uses and stuff
