@@ -411,6 +411,7 @@ static void CommonSubexpressionElimination(Module *M)
                         if(j->getOpcode()==Instruction::Load){
                             
                         }
+                        ++j;
                     }
                 }
             }
