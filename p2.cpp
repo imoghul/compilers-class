@@ -405,6 +405,7 @@ static void CommonSubexpressionElimination(Module *M)
             {
                 if(i->getOpcode()==Instruction::Load){
                     auto j = i;
+                    if(j==BB->end()) break;
                     j++;
                     if(j==BB->end()) break;
                     auto& inst = *j;
