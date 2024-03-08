@@ -288,9 +288,9 @@ static int cseSupports(Instruction *I)
     return true;
 }
 
-static void doCSE(Function* F , BasicBlock *BB, Instruction *I)
+static void doCSE(Function* F , BasicBlock *BB, Instruction *I, int depth)
 {
-    if (!cseSupports((Instruction *)I))
+    if (!cseSupports((Instruction *)I) || depth>1000)
         return;
 
     for (auto i = BB->begin(); i != BB->end();)
@@ -313,7 +313,7 @@ static void doCSE(Function* F , BasicBlock *BB, Instruction *I)
 
     for (DomTreeNodeBase<BasicBlock> **child = Node->begin(); child != Node->end(); child++)
     {
-        doCSE(F,(*child)->getBlock(), I);
+        doCSE(F,(*child)->getBlock(), I,depth+1);
     }
 }
 
@@ -382,7 +382,7 @@ static void CommonSubexpressionElimination(Module *M)
                 DomTreeNodeBase<BasicBlock> *Node = DT->getNode(&*BB); // get node for BB
                 for (DomTreeNodeBase<BasicBlock> **child = Node->begin(); child != Node->end(); child++)
                 {
-                    doCSE(&(*F),(*child)->getBlock(), &(*i));
+                    doCSE(&(*F),(*child)->getBlock(), &(*i),0);
                 }
                 
                 delete DT;
