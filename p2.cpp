@@ -352,7 +352,7 @@ static void CommonSubexpressionElimination(Module *M)
     }
 
     // CSE
-
+    return;
     for (auto F = M->begin(); F != M->end(); F++)
     {
         for (auto BB = F->begin(); BB != F->end(); BB++)
