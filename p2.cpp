@@ -361,8 +361,11 @@ static void CommonSubexpressionElimination(Module *M)
             {
                 for (auto j = i; j != BB->end();)
                 {
-                    if (&(*i) == &(*j))
+                    if (&(*i) == &(*j)){
+                        ++j;
                         continue;
+                    }
+                        
 
                     auto &inst = *j;
                     j++;
@@ -374,7 +377,7 @@ static void CommonSubexpressionElimination(Module *M)
                     }
                     break;
                 }
-                return;
+                
                 // iterate over each child of BB
                 auto DT = new DominatorTreeBase<BasicBlock, false>(); // make a new one
                 DT->recalculate(*F);                                  // calculate for a new function F
