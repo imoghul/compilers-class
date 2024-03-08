@@ -290,7 +290,7 @@ static int cseSupports(Instruction *I)
 
 static void doCSE(Function* F , BasicBlock *BB, Instruction *I, int depth)
 {
-    if (!cseSupports((Instruction *)I) || depth>10)
+    if (!cseSupports((Instruction *)I))
         return;
 
     for (auto i = BB->begin(); i != BB->end();)
