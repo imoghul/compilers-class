@@ -403,21 +403,27 @@ static void CommonSubexpressionElimination(Module *M)
 
             for (auto i = BB->begin(); i != BB->end(); i++)
             {
-                if(i->getOpcode()==Instruction::Load){
+                if (i->getOpcode() == Instruction::Load)
+                {
                     auto j = i;
-                    if(j==BB->end()) break;
+                    if (j == BB->end())
+                        break;
                     j++;
-                    if(j==BB->end()) break;
-                    auto& inst = *j;
-                    if(!&inst) break;
-                    return;
-                    for(;j!=BB->end();){
-                        if(inst.getOpcode()==Instruction::Load && ! inst.isVolatile() && inst.getAccessType() == inst.getAccessType() && inst.getOperand(0) == inst.getOperand(0)){
-                            
+                    if (j == BB->end())
+                        break;
+                    auto &inst = *j;
+                    if (!&inst)
+                        break;
+                    for (; j != BB->end();)
+                    {
+                        if (inst.getOpcode() == Instruction::Load && !inst.isVolatile() && i->getAccessType() == inst.getAccessType() && i->getOperand(0) == inst.getOperand(0))
+                        {
+
                             inst.replaceAllUsesWith((Value *)(&(i)));
                             inst.eraseFromParent();
                         }
-                        if(inst.getOpcode()==Instruction::Store)break;
+                        if (inst.getOpcode() == Instruction::Store)
+                            break;
                         ++j;
                     }
                 }
