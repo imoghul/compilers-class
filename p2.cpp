@@ -323,14 +323,12 @@ static void CommonSubexpressionElimination(Module *M)
     // Implement this function
 
     // Optimization 0&1
-    int numInstr = 0;
     for (auto f = M->begin(); f != M->end(); f++)
     {
         for (auto bb = f->begin(); bb != f->end(); bb++)
         {
             for (auto i = bb->begin(); i != bb->end();)
             {
-                numInstr++;
                 auto &inst = *i;
                 i++;
 
@@ -414,8 +412,6 @@ static void CommonSubexpressionElimination(Module *M)
                     if (j == BB->end())
                         break;
                     auto &inst = *j;
-                    if (!&inst)
-                        break;
                     for (; j != BB->end();)
                     {
                         auto &inst = *j;
@@ -435,6 +431,7 @@ static void CommonSubexpressionElimination(Module *M)
     }
 
     // optimization 3
+    return;
     for (auto F = M->begin(); F != M->end(); F++)
     {
         for (auto BB = F->begin(); BB != F->end(); BB++)
@@ -452,8 +449,6 @@ static void CommonSubexpressionElimination(Module *M)
                     if (j == BB->end())
                         break;
                     auto &inst = *j;
-                    if (!&inst)
-                        break;
                     for (; j != BB->end();)
                     {
                         auto &inst = *j;
