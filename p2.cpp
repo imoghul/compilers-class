@@ -435,4 +435,9 @@ static void CommonSubexpressionElimination(Module *M)
             }
         }
     }
+
+    fprintf(stdout,"CSE_Dead........................%d\n",CSEDead);
+    fprintf(stdout,"CSE_Simplify....................%d\n",CSESimplify);
+    fprintf(stdout,"CSE_Rloads......................%d\n",CSERloads);
+    fprintf(stdout,"CSE_RStore......................%d\n",CSERStore);
 }
