@@ -467,10 +467,10 @@ static void CommonSubexpressionElimination(Module *M)
                         //     break;    
                         // }
 
-                        if(inst.getOpcode() == Instruction::Store || inst.getOpcode() == Instruction::Load){
-                            // flag = false;
-                            break;
-                        }
+                        // if(inst.getOpcode() == Instruction::Store || inst.getOpcode() == Instruction::Load){
+                        //     // flag = false;
+                        //     break;
+                        // }
 
                     }
                 }
