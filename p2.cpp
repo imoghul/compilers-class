@@ -290,6 +290,8 @@ static int cseSupports(Instruction *I)
     return true;
 }
 
+int CSE_basic = 0;
+
 static void doCSE(Function *F, BasicBlock *BB, Instruction *I, int depth)
 {
     if (!cseSupports((Instruction *)I))
@@ -304,6 +306,7 @@ static void doCSE(Function *F, BasicBlock *BB, Instruction *I, int depth)
             // replace uses and stuff
             inst.replaceAllUsesWith(I);
             inst.eraseFromParent();
+            CSE_basic++;
         }
         break;
     }
@@ -323,7 +326,7 @@ static void CommonSubexpressionElimination(Module *M)
 {
     // Implement this function
     
-    int CSESimplify = 0, CSEDead = 0, CSEBasic = 0, CSERLoad = 0, CSERStore = 0;
+    int CSESimplify = 0, CSEDead = 0, CSEBasic = 0, CSERLoad = 0, CSERStore = 0, CSEStore2loads = 0;
     // Optimization 0&1
     int numInstr = 0;
     for (auto f = M->begin(); f != M->end(); f++)
@@ -376,6 +379,7 @@ static void CommonSubexpressionElimination(Module *M)
                         // replace uses and stuff
                         inst.replaceAllUsesWith((Value *)(&(*i)));
                         inst.eraseFromParent();
+                        CSE_basic++;
                     }
                     break;
                 }
@@ -436,8 +440,10 @@ static void CommonSubexpressionElimination(Module *M)
         }
     }
 
+    fprintf(stdout,"CSE_basic.......................%d\n",CSE_basic);
     fprintf(stdout,"CSE_Dead........................%d\n",CSEDead);
     fprintf(stdout,"CSE_Simplify....................%d\n",CSESimplify);
     fprintf(stdout,"CSE_Rloads......................%d\n",CSERLoad);
+    fprintf(stdout,"CSE_Store2loads.................%d\n",CSEStore2loads);
     fprintf(stdout,"CSE_RStore......................%d\n",CSERStore);
 }
