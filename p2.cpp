@@ -305,7 +305,7 @@ static void doCSE(Function *F, BasicBlock *BB, Instruction *I, int depth)
             // replace uses and stuff
             inst.replaceAllUsesWith(I);
             inst.eraseFromParent();
-            LLVMStatisticsInc(CSEElim);
+            CSEElim++;
         }
         break;
     }
@@ -340,7 +340,7 @@ static void CommonSubexpressionElimination(Module *M)
                 if (isDead(inst))
                 {
                     inst.eraseFromParent();
-                    LLVMStatisticsInc(CSEDead);
+                    CSEDead++;
                     continue;
                 }
 
@@ -348,7 +348,7 @@ static void CommonSubexpressionElimination(Module *M)
                 if (val)
                 {
                     inst.replaceAllUsesWith(val);
-                    LLVMStatisticsInc(CSESimplify);
+                    CSESimplify++;
                 }
             }
         }
@@ -377,7 +377,7 @@ static void CommonSubexpressionElimination(Module *M)
                         // replace uses and stuff
                         inst.replaceAllUsesWith((Value *)(&(*i)));
                         inst.eraseFromParent();
-                        LLVMStatisticsInc(CSEElim);
+                        CSEElim++;
                     }
                     break;
                 }
@@ -425,7 +425,7 @@ static void CommonSubexpressionElimination(Module *M)
                         j++;
                         if (inst.getOpcode() == Instruction::Load && !inst.isVolatile() && i->getAccessType() == inst.getAccessType() && i->getOperand(0) == inst.getOperand(0))
                         {
-                            LLVMStatisticsInc(CSELdElim);
+                            CSERLdElim++;
                             inst.replaceAllUsesWith((Value *)(&(*i)));
                             inst.eraseFromParent();
                         }
