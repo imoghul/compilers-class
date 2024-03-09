@@ -453,13 +453,13 @@ static void CommonSubexpressionElimination(Module *M)
                     {
                         auto &inst = *j;
                         j++;
-                        // if (inst.getOpcode() == Instruction::Load && !inst.isVolatile() && i->getAccessType() == inst.getAccessType() && i->getOperand(0) == inst.getOperand(0))
-                        // {
-                        //     CSEStore2Load++;
-                        //     inst.replaceAllUsesWith((Value *)(&(*i)));
-                        //     inst.eraseFromParent();
-                        //     continue;
-                        // }
+                        if (inst.getOpcode() == Instruction::Load && !inst.isVolatile() && i->getAccessType() == inst.getAccessType() && i->getOperand(0) == inst.getOperand(0))
+                        {
+                            CSEStore2Load++;
+                            inst.replaceAllUsesWith((Value *)(&(*i)));
+                            inst.eraseFromParent();
+                            continue;
+                        }
                         // if(inst.getOpcode() == Instruction::Store && !i->isVolatile() && i->getOperand(1) == inst.getOperand(1) && i->getOperand(0)->getType() == inst.getOperand(0)->getType()){
                         //     i->eraseFromParent();
                         //     CSEStElim++;
