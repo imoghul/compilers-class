@@ -453,7 +453,7 @@ static void CommonSubexpressionElimination(Module *M)
                     {
                         auto &inst = *j;
                         j++;
-                        if (inst.getOpcode() == Instruction::Load && !inst.isVolatile() && i->getAccessType() == inst.getAccessType() && i->getOperand(0) == inst.getOperand(0))
+                        if (inst.getOpcode() == Instruction::Load && !inst.isVolatile() && i->getType() == inst.getType() && i->getOperand(0) == inst.getOperand(0))
                         {
                             CSEStore2Load++;
                             inst.replaceAllUsesWith((Value *)(&(*i)));
