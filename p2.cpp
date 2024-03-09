@@ -26,8 +26,6 @@
 // #include "dominance.h"
 // #include "transform.h"
 
-
-
 using namespace llvm;
 
 bool isDead(Instruction &I)
@@ -290,7 +288,6 @@ static int cseSupports(Instruction *I)
     return true;
 }
 
-
 static void doCSE(Function *F, BasicBlock *BB, Instruction *I, int depth)
 {
     if (!cseSupports((Instruction *)I))
@@ -324,7 +321,7 @@ static void doCSE(Function *F, BasicBlock *BB, Instruction *I, int depth)
 static void CommonSubexpressionElimination(Module *M)
 {
     // Implement this function
-    
+
     // Optimization 0&1
     int numInstr = 0;
     for (auto f = M->begin(); f != M->end(); f++)
@@ -416,12 +413,12 @@ static void CommonSubexpressionElimination(Module *M)
                     j++;
                     if (j == BB->end())
                         break;
-                    auto& inst = *j;
+                    auto &inst = *j;
                     if (!&inst)
                         break;
                     for (; j != BB->end();)
                     {
-                        auto& inst = *j;
+                        auto &inst = *j;
                         j++;
                         if (inst.getOpcode() == Instruction::Load && !inst.isVolatile() && i->getAccessType() == inst.getAccessType() && i->getOperand(0) == inst.getOperand(0))
                         {
@@ -431,9 +428,58 @@ static void CommonSubexpressionElimination(Module *M)
                         }
                         if (inst.getOpcode() == Instruction::Store)
                             break;
-                        
                     }
                 }
+            }
+        }
+    }
+
+    // optimization 3
+    for (auto F = M->begin(); F != M->end(); F++)
+    {
+        for (auto BB = F->begin(); BB != F->end(); BB++)
+        {
+
+            for (auto i = BB->begin(); i != BB->end(); )
+            {
+                bool flag = true;
+                if (i->getOpcode() == Instruction::Store)
+                {
+                    auto j = i;
+                    if (j == BB->end())
+                        break;
+                    j++;
+                    if (j == BB->end())
+                        break;
+                    auto &inst = *j;
+                    if (!&inst)
+                        break;
+                    for (; j != BB->end();)
+                    {
+                        auto &inst = *j;
+                        j++;
+                        if (inst.getOpcode() == Instruction::Load && !inst.isVolatile() && i->getAccessType() == inst.getAccessType() && i->getOperand(0) == inst.getOperand(0))
+                        {
+                            CSEStore2Load++;
+                            inst.replaceAllUsesWith((Value *)(&(*i)));
+                            inst.eraseFromParent();
+                            continue;
+                        }
+                        if(inst.getOpcode() == Instruction::Store && !i->isVolatile() && i->getOperand(1) == inst.getOperand(1) && i->getOperand(0)->getType() == inst.getOperand(0)->getType()){
+                            i->eraseFromParent();
+                            CSERStore++;
+                            flag = false;
+                            break;    
+                        }
+
+                        if(inst.getOpcode() == Instruction::Store || inst.getOpcode() == Instruction::Load){
+                            flag = false;
+                            break;
+                        }
+
+                    }
+                }
+                if(flag)i++;
             }
         }
     }
