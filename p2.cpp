@@ -290,7 +290,6 @@ static int cseSupports(Instruction *I)
     return true;
 }
 
-int CSE_basic = 0;
 
 static void doCSE(Function *F, BasicBlock *BB, Instruction *I, int depth)
 {
@@ -306,7 +305,7 @@ static void doCSE(Function *F, BasicBlock *BB, Instruction *I, int depth)
             // replace uses and stuff
             inst.replaceAllUsesWith(I);
             inst.eraseFromParent();
-            CSE_basic++;
+            LLVMStatisticsInc(CSEElim);
         }
         break;
     }
@@ -326,7 +325,6 @@ static void CommonSubexpressionElimination(Module *M)
 {
     // Implement this function
     
-    int CSESimplify = 0, CSEDead = 0, CSEBasic = 0, CSERLoad = 0, CSERStore = 0, CSEStore2loads = 0;
     // Optimization 0&1
     int numInstr = 0;
     for (auto f = M->begin(); f != M->end(); f++)
@@ -342,7 +340,7 @@ static void CommonSubexpressionElimination(Module *M)
                 if (isDead(inst))
                 {
                     inst.eraseFromParent();
-                    CSEDead++;
+                    LLVMStatisticsInc(CSEDead);
                     continue;
                 }
 
@@ -350,7 +348,7 @@ static void CommonSubexpressionElimination(Module *M)
                 if (val)
                 {
                     inst.replaceAllUsesWith(val);
-                    CSESimplify++;
+                    LLVMStatisticsInc(CSESimplify);
                 }
             }
         }
@@ -379,7 +377,7 @@ static void CommonSubexpressionElimination(Module *M)
                         // replace uses and stuff
                         inst.replaceAllUsesWith((Value *)(&(*i)));
                         inst.eraseFromParent();
-                        CSE_basic++;
+                        LLVMStatisticsInc(CSEElim);
                     }
                     break;
                 }
@@ -427,7 +425,7 @@ static void CommonSubexpressionElimination(Module *M)
                         j++;
                         if (inst.getOpcode() == Instruction::Load && !inst.isVolatile() && i->getAccessType() == inst.getAccessType() && i->getOperand(0) == inst.getOperand(0))
                         {
-                            CSERLoad++;
+                            LLVMStatisticsInc(CSELdElim);
                             inst.replaceAllUsesWith((Value *)(&(*i)));
                             inst.eraseFromParent();
                         }
