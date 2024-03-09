@@ -425,7 +425,7 @@ static void CommonSubexpressionElimination(Module *M)
                         j++;
                         if (inst.getOpcode() == Instruction::Load && !inst.isVolatile() && i->getAccessType() == inst.getAccessType() && i->getOperand(0) == inst.getOperand(0))
                         {
-                            CSERLdElim++;
+                            CSELdElim++;
                             inst.replaceAllUsesWith((Value *)(&(*i)));
                             inst.eraseFromParent();
                         }
@@ -438,10 +438,10 @@ static void CommonSubexpressionElimination(Module *M)
         }
     }
 
-    fprintf(stdout,"CSE_basic.......................%d\n",CSE_basic);
-    fprintf(stdout,"CSE_Dead........................%d\n",CSEDead);
-    fprintf(stdout,"CSE_Simplify....................%d\n",CSESimplify);
-    fprintf(stdout,"CSE_Rloads......................%d\n",CSERLoad);
-    fprintf(stdout,"CSE_Store2loads.................%d\n",CSEStore2loads);
-    fprintf(stdout,"CSE_RStore......................%d\n",CSERStore);
+    // fprintf(stdout,"CSE_basic.......................%d\n",CSE_basic);
+    // fprintf(stdout,"CSE_Dead........................%d\n",CSEDead);
+    // fprintf(stdout,"CSE_Simplify....................%d\n",CSESimplify);
+    // fprintf(stdout,"CSE_Rloads......................%d\n",CSERLoad);
+    // fprintf(stdout,"CSE_Store2loads.................%d\n",CSEStore2loads);
+    // fprintf(stdout,"CSE_RStore......................%d\n",CSERStore);
 }
