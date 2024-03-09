@@ -473,7 +473,7 @@ static void CommonSubexpressionElimination(Module *M)
                         }
 
                         if(inst.getOpcode() == Instruction::Store || inst.getOpcode() == Instruction::Load){
-                            flag = false;
+                            // flag = false;
                             break;
                         }
 
