@@ -27,7 +27,6 @@
 // #include "transform.h"
 
 
-int CSESimplify = 0, CSEDead = 0, CSEBasic = 0, CSERLoad = 0, CSERStore = 0;
 
 using namespace llvm;
 
@@ -323,7 +322,8 @@ static void doCSE(Function *F, BasicBlock *BB, Instruction *I, int depth)
 static void CommonSubexpressionElimination(Module *M)
 {
     // Implement this function
-
+    
+    int CSESimplify = 0, CSEDead = 0, CSEBasic = 0, CSERLoad = 0, CSERStore = 0;
     // Optimization 0&1
     int numInstr = 0;
     for (auto f = M->begin(); f != M->end(); f++)
