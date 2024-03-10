@@ -323,111 +323,111 @@ static void CommonSubexpressionElimination(Module *M)
     // Implement this function
 
     // Optimization 0&1
-    for (auto f = M->begin(); f != M->end(); f++)
-    {
-        for (auto bb = f->begin(); bb != f->end(); bb++)
-        {
-            for (auto i = bb->begin(); i != bb->end();)
-            {
-                auto &inst = *i;
-                i++;
+    // for (auto f = M->begin(); f != M->end(); f++)
+    // {
+    //     for (auto bb = f->begin(); bb != f->end(); bb++)
+    //     {
+    //         for (auto i = bb->begin(); i != bb->end();)
+    //         {
+    //             auto &inst = *i;
+    //             i++;
 
-                if (isDead(inst))
-                {
-                    inst.eraseFromParent();
-                    CSEDead++;
-                    continue;
-                }
+    //             if (isDead(inst))
+    //             {
+    //                 inst.eraseFromParent();
+    //                 CSEDead++;
+    //                 continue;
+    //             }
 
-                Value *val = simplifyInstruction(&inst, M->getDataLayout());
-                if (val)
-                {
-                    inst.replaceAllUsesWith(val);
-                    CSESimplify++;
-                }
-            }
-        }
-    }
+    //             Value *val = simplifyInstruction(&inst, M->getDataLayout());
+    //             if (val)
+    //             {
+    //                 inst.replaceAllUsesWith(val);
+    //                 CSESimplify++;
+    //             }
+    //         }
+    //     }
+    // }
 
-    // CSE
-    for (auto F = M->begin(); F != M->end(); F++)
-    {
-        for (auto BB = F->begin(); BB != F->end(); BB++)
-        {
+    // // CSE
+    // for (auto F = M->begin(); F != M->end(); F++)
+    // {
+    //     for (auto BB = F->begin(); BB != F->end(); BB++)
+    //     {
 
-            for (auto i = BB->begin(); i != BB->end(); i++)
-            {
-                for (auto j = i; j != BB->end();)
-                {
-                    if (&(*i) == &(*j))
-                    {
-                        ++j;
-                        continue;
-                    }
+    //         for (auto i = BB->begin(); i != BB->end(); i++)
+    //         {
+    //             for (auto j = i; j != BB->end();)
+    //             {
+    //                 if (&(*i) == &(*j))
+    //                 {
+    //                     ++j;
+    //                     continue;
+    //                 }
 
-                    auto &inst = *j;
-                    j++;
-                    if (isCSE(*i, inst))
-                    {
-                        // replace uses and stuff
-                        inst.replaceAllUsesWith((Value *)(&(*i)));
-                        inst.eraseFromParent();
-                        CSEElim++;
-                    }
-                    break;
-                }
+    //                 auto &inst = *j;
+    //                 j++;
+    //                 if (isCSE(*i, inst))
+    //                 {
+    //                     // replace uses and stuff
+    //                     inst.replaceAllUsesWith((Value *)(&(*i)));
+    //                     inst.eraseFromParent();
+    //                     CSEElim++;
+    //                 }
+    //                 break;
+    //             }
 
-                // iterate over each child of BB
-                auto DT = new DominatorTreeBase<BasicBlock, false>(); // make a new one
-                DT->recalculate(*F);                                  // calculate for a new function F
+    //             // iterate over each child of BB
+    //             auto DT = new DominatorTreeBase<BasicBlock, false>(); // make a new one
+    //             DT->recalculate(*F);                                  // calculate for a new function F
 
-                DomTreeNodeBase<BasicBlock> *Node = DT->getNode(&*BB); // get node for BB
-                for (DomTreeNodeBase<BasicBlock> **child = Node->begin(); child != Node->end(); child++)
-                {
-                    doCSE(&(*F), (*child)->getBlock(), &(*i), 0);
-                }
+    //             DomTreeNodeBase<BasicBlock> *Node = DT->getNode(&*BB); // get node for BB
+    //             for (DomTreeNodeBase<BasicBlock> **child = Node->begin(); child != Node->end(); child++)
+    //             {
+    //                 doCSE(&(*F), (*child)->getBlock(), &(*i), 0);
+    //             }
 
-                delete DT;
-                break;
-            }
-            break;
-        }
-        break;
-    }
+    //             delete DT;
+    //             break;
+    //         }
+    //         break;
+    //     }
+    //     break;
+    // }
 
-    // optimization 2
-    for (auto F = M->begin(); F != M->end(); F++)
-    {
-        for (auto BB = F->begin(); BB != F->end(); BB++)
-        {
+    // // optimization 2
+    // for (auto F = M->begin(); F != M->end(); F++)
+    // {
+    //     for (auto BB = F->begin(); BB != F->end(); BB++)
+    //     {
 
-            for (auto i = BB->begin(); i != BB->end(); i++)
-            {
-                if (i->getOpcode() == Instruction::Load)
-                {
-                    auto j = i;
-                    if (j == BB->end())
-                        break;
-                    j++;
-                    if (j == BB->end())
-                        break;
-                    for (; j != BB->end();)
-                    {
-                        auto &inst = *j;
-                        j++;
-                        if (inst.getOpcode() == Instruction::Load && !inst.isVolatile() && i->getAccessType() == inst.getAccessType() && i->getOperand(0) == inst.getOperand(0))
-                        {
-                            CSELdElim++;
-                            inst.replaceAllUsesWith((Value *)(&(*i)));
-                            inst.eraseFromParent();
-                        }
-                        if (inst.getOpcode() == Instruction::Store)
-                            break;
-                    }
-                }
-            }
-        }
-    }
+    //         for (auto i = BB->begin(); i != BB->end(); i++)
+    //         {
+    //             if (i->getOpcode() == Instruction::Load)
+    //             {
+    //                 auto j = i;
+    //                 if (j == BB->end())
+    //                     break;
+    //                 j++;
+    //                 if (j == BB->end())
+    //                     break;
+    //                 for (; j != BB->end();)
+    //                 {
+    //                     auto &inst = *j;
+    //                     j++;
+    //                     if (inst.getOpcode() == Instruction::Load && !inst.isVolatile() && i->getAccessType() == inst.getAccessType() && i->getOperand(0) == inst.getOperand(0))
+    //                     {
+    //                         CSELdElim++;
+    //                         inst.replaceAllUsesWith((Value *)(&(*i)));
+    //                         inst.eraseFromParent();
+    //                     }
+    //                     if (inst.getOpcode() == Instruction::Store)
+    //                         break;
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
 
     // optimization 3
     
