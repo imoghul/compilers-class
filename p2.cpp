@@ -458,7 +458,7 @@ static void CommonSubexpressionElimination(Module *M)
                             inst.eraseFromParent();
                             continue;
                         }
-                        if(inst.getOpcode() == Instruction::Store && !i->isVolatile() && i->getOperand(1) == inst.getOperand(1) && i->getAccessType() == inst.getAccessType()){
+                        if(inst.getOpcode() == Instruction::Store && !i->isVolatile() && i->getOperand(1) == inst.getOperand(1) && i->getOperand(0)->getAccessType() == inst.getOperand(0)->getAccessType()){
                             i->eraseFromParent();
                             CSEStElim++;
                             flag = false;
@@ -466,7 +466,6 @@ static void CommonSubexpressionElimination(Module *M)
                         }
 
                         if(inst.getOpcode() == Instruction::Store || inst.getOpcode() == Instruction::Load){
-                            // flag = false;
                             break;
                         }
 
