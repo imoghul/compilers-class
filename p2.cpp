@@ -255,6 +255,7 @@ static llvm::Statistic CSEStElim = {"", "CSEStElim", "CSE redundant stores"};
 
 static bool isCSE(Instruction &i1, Instruction &i2)
 {
+    if(&i1==&i2) return false;
     if (i1.getOpcode() != i2.getOpcode())
         return false;
     if (i1.getOpcode() == Instruction::Load || i1.getOpcode() == Instruction::Store)
@@ -458,16 +459,16 @@ static void CommonSubexpressionElimination(Module *M)
                         //     inst.eraseFromParent();
                         //     continue;
                         // }
-                        // if(inst.getOpcode() == Instruction::Store && !i->isVolatile() && i->getOperand(1) == inst.getOperand(1) && i->getOperand(0)->getType() == inst.getOperand(0)->getType()){
-                        //     i->eraseFromParent();
-                        //     CSEStElim++;
-                        //     flag = false;
-                        //     break;    
-                        // }
+                        if(inst.getOpcode() == Instruction::Store && !i->isVolatile() && i->getOperand(1) == inst.getOperand(1) && i->getOperand(0)->getType() == inst.getOperand(0)->getType()){
+                            i->eraseFromParent();
+                            CSEStElim++;
+                            flag = false;
+                            break;    
+                        }
 
-                        // if(inst.getOpcode() == Instruction::Store || inst.getOpcode() == Instruction::Load){
-                        //     break;
-                        // }
+                        if(inst.getOpcode() == Instruction::Store || inst.getOpcode() == Instruction::Load){
+                            break;
+                        }
 
                     }
                 }
