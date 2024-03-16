@@ -466,7 +466,6 @@ static void CommonSubexpressionElimination(Module *M)
                         if(inst.getOpcode() == Instruction::Store && !i_inst.isVolatile() && i_inst.getOperand(1) == inst.getOperand(1) && i_inst.getOperand(0)->getType() == inst.getOperand(0)->getType()){
                             i_inst.eraseFromParent();
                             CSEStElim++;
-                            flag = false;
                             break;    
                         }
 
