@@ -255,7 +255,8 @@ static llvm::Statistic CSEStElim = {"", "CSEStElim", "CSE redundant stores"};
 
 static bool isCSE(Instruction &i1, Instruction &i2)
 {
-    if(&i1==&i2) return false;
+    if (&i1 == &i2)
+        return false;
     if (i1.getOpcode() != i2.getOpcode())
         return false;
     if (i1.getOpcode() == Instruction::Load || i1.getOpcode() == Instruction::Store)
@@ -337,8 +338,18 @@ static void CommonSubexpressionElimination(Module *M)
                 {
                     inst.eraseFromParent();
                     CSEDead++;
-                    continue;
                 }
+            }
+        }
+    }
+    for (auto f = M->begin(); f != M->end(); f++)
+    {
+        for (auto bb = f->begin(); bb != f->end(); bb++)
+        {
+            for (auto i = bb->begin(); i != bb->end();)
+            {
+                auto &inst = *i;
+                i++;
 
                 Value *val = simplifyInstruction(&inst, M->getDataLayout());
                 if (val)
@@ -431,7 +442,7 @@ static void CommonSubexpressionElimination(Module *M)
     }
 
     // optimization 3
-    
+
     // for (auto F = M->begin(); F != M->end(); F++)
     // {
     //     for (auto BB = F->begin(); BB != F->end(); BB++)
@@ -466,7 +477,7 @@ static void CommonSubexpressionElimination(Module *M)
     //                     if(inst.getOpcode() == Instruction::Store && !i_inst.isVolatile() && i_inst.getOperand(1) == inst.getOperand(1) && i_inst.getOperand(0)->getType() == inst.getOperand(0)->getType()){
     //                         i_inst.eraseFromParent();
     //                         CSEStElim++;
-    //                         break;    
+    //                         break;
     //                     }
 
     //                     if(inst.getOpcode() == Instruction::Store || inst.getOpcode() == Instruction::Load){
