@@ -444,7 +444,6 @@ static void CommonSubexpressionElimination(Module *M)
                 auto old_i = i;
                 ++i;
 
-                bool flag = true;
                 if (i_inst.getOpcode() == Instruction::Store)
                 {
                     auto j = old_i;
