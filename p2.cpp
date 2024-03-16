@@ -432,52 +432,52 @@ static void CommonSubexpressionElimination(Module *M)
 
     // optimization 3
     
-    for (auto F = M->begin(); F != M->end(); F++)
-    {
-        for (auto BB = F->begin(); BB != F->end(); BB++)
-        {
+    // for (auto F = M->begin(); F != M->end(); F++)
+    // {
+    //     for (auto BB = F->begin(); BB != F->end(); BB++)
+    //     {
 
-            for (auto i = BB->begin(); i != BB->end(); )
-            {
+    //         for (auto i = BB->begin(); i != BB->end(); )
+    //         {
 
-                auto& i_inst = *i;
-                auto old_i = i;
-                ++i;
+    //             auto& i_inst = *i;
+    //             auto old_i = i;
+    //             ++i;
 
-                if (i_inst.getOpcode() == Instruction::Store)
-                {
-                    auto j = old_i;
-                    if (j == BB->end())
-                        break;
-                    j++;
-                    if (j == BB->end())
-                        break;
-                    for (; j != BB->end();)
-                    {
-                        auto &inst = *j;
-                        j++;
-                        if (inst.getOpcode() == Instruction::Load && !inst.isVolatile() && i_inst.getOperand(1) == inst.getOperand(0) && inst.getType() == i_inst.getOperand(0)->getType())//&& i_inst.getType() == inst.getType() && i_inst.getOperand(0) == inst.getOperand(0))
-                        {
-                            CSEStore2Load++;
-                            inst.replaceAllUsesWith((Value *)(&(*old_i)));
-                            inst.eraseFromParent();
-                            continue;
-                        }
-                        if(inst.getOpcode() == Instruction::Store && !i_inst.isVolatile() && i_inst.getOperand(1) == inst.getOperand(1) && i_inst.getOperand(0)->getType() == inst.getOperand(0)->getType()){
-                            i_inst.eraseFromParent();
-                            CSEStElim++;
-                            break;    
-                        }
+    //             if (i_inst.getOpcode() == Instruction::Store)
+    //             {
+    //                 auto j = old_i;
+    //                 if (j == BB->end())
+    //                     break;
+    //                 j++;
+    //                 if (j == BB->end())
+    //                     break;
+    //                 for (; j != BB->end();)
+    //                 {
+    //                     auto &inst = *j;
+    //                     j++;
+    //                     if (inst.getOpcode() == Instruction::Load && !inst.isVolatile() && i_inst.getOperand(1) == inst.getOperand(0) && inst.getType() == i_inst.getOperand(0)->getType())//&& i_inst.getType() == inst.getType() && i_inst.getOperand(0) == inst.getOperand(0))
+    //                     {
+    //                         CSEStore2Load++;
+    //                         inst.replaceAllUsesWith((Value *)(&(*old_i)));
+    //                         inst.eraseFromParent();
+    //                         continue;
+    //                     }
+    //                     if(inst.getOpcode() == Instruction::Store && !i_inst.isVolatile() && i_inst.getOperand(1) == inst.getOperand(1) && i_inst.getOperand(0)->getType() == inst.getOperand(0)->getType()){
+    //                         i_inst.eraseFromParent();
+    //                         CSEStElim++;
+    //                         break;    
+    //                     }
 
-                        if(inst.getOpcode() == Instruction::Store || inst.getOpcode() == Instruction::Load){
-                            break;
-                        }
+    //                     if(inst.getOpcode() == Instruction::Store || inst.getOpcode() == Instruction::Load){
+    //                         break;
+    //                     }
 
-                    }
-                }
-            }
-        }
-    }
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
 
     // fprintf(stdout,"CSE_basic.......................%d\n",CSE_basic);
     // fprintf(stdout,"CSE_Dead........................%d\n",CSEDead);
