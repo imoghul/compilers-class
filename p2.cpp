@@ -440,7 +440,7 @@ static void CommonSubexpressionElimination(Module *M)
             for (auto i = BB->begin(); i != BB->end(); )
             {
 
-                auto i_inst = *i;
+                auto& i_inst = *i;
                 ++i;
 
                 bool flag = true;
