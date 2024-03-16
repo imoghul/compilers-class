@@ -441,12 +441,13 @@ static void CommonSubexpressionElimination(Module *M)
             {
 
                 auto& i_inst = *i;
+                auto old_i = i;
                 ++i;
 
                 bool flag = true;
                 if (i_inst.getOpcode() == Instruction::Store)
                 {
-                    auto j = i;
+                    auto j = old_i;
                     if (j == BB->end())
                         break;
                     j++;
@@ -459,7 +460,7 @@ static void CommonSubexpressionElimination(Module *M)
                         if (inst.getOpcode() == Instruction::Load && !inst.isVolatile() && i_inst.getType() == inst.getType() && i_inst.getOperand(0) == inst.getOperand(0))
                         {
                             CSEStore2Load++;
-                            inst.replaceAllUsesWith((Value *)(&(*i)));
+                            inst.replaceAllUsesWith((Value *)(&(*old_i)));
                             inst.eraseFromParent();
                             continue;
                         }
