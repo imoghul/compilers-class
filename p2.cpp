@@ -334,10 +334,11 @@ static void CommonSubexpressionElimination(Module *M)
                 auto &inst = *i;
                 i++;
 
-                if (isDead(inst))
+                Value *val = simplifyInstruction(&inst, M->getDataLayout());
+                if (val)
                 {
-                    inst.eraseFromParent();
-                    CSEDead++;
+                    inst.replaceAllUsesWith(val);
+                    CSESimplify++;
                 }
             }
         }
@@ -351,11 +352,10 @@ static void CommonSubexpressionElimination(Module *M)
                 auto &inst = *i;
                 i++;
 
-                Value *val = simplifyInstruction(&inst, M->getDataLayout());
-                if (val)
+                if (isDead(inst))
                 {
-                    inst.replaceAllUsesWith(val);
-                    CSESimplify++;
+                    inst.eraseFromParent();
+                    CSEDead++;
                 }
             }
         }
