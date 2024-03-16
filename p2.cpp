@@ -261,7 +261,7 @@ static bool isCSE(Instruction &i1, Instruction &i2)
     if (i1.getOpcode() == Instruction::Load || i1.getOpcode() == Instruction::Store)
         return false;
 
-    return false;
+    return true;
 }
 
 static int cseSupports(Instruction *I)
