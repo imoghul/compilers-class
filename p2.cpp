@@ -477,7 +477,6 @@ static void CommonSubexpressionElimination(Module *M)
 
                     }
                 }
-                if(flag)i++;
             }
         }
     }
