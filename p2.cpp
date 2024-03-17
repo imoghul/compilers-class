@@ -56,12 +56,12 @@
 
 using namespace llvm;
 
-extern "C" {
+extern "C"
+{
     static bool isCSE(Instruction &i1, Instruction &i2);
     static int cseSupports(Instruction *i);
     static void CommonSubexpressionElimination(Module *M);
 }
-
 
 bool isDead(Instruction &I)
 {
@@ -296,7 +296,6 @@ static bool isCSE(Instruction &i1, Instruction &i2)
     LLVMValueRef I1 = wrap(&i1);
     LLVMValueRef I2 = wrap(&i2);
 
-
     bool ret = 0;
     if (LLVMIsAICmpInst(I1) && (LLVMGetICmpPredicate(I1) != LLVMGetICmpPredicate(I2)))
     {
@@ -310,18 +309,18 @@ static bool isCSE(Instruction &i1, Instruction &i2)
             ret = 0;
         }
     }
-    if (LLVMGetInstructionOpcode(I1) == LLVMGetInstructionOpcode(I2)) 
+    if (LLVMGetInstructionOpcode(I1) == LLVMGetInstructionOpcode(I2))
     {
-        if (LLVMTypeOf(I1) == LLVMTypeOf(I2)) 
+        if (LLVMTypeOf(I1) == LLVMTypeOf(I2))
         {
-            if (LLVMGetNumOperands(I1) == LLVMGetNumOperands(I2)) 
+            if (LLVMGetNumOperands(I1) == LLVMGetNumOperands(I2))
             {
                 int oper_iter;
                 for (oper_iter = 0; oper_iter < LLVMGetNumOperands(I1); oper_iter++)
                 {
                     LLVMValueRef op_I = LLVMGetOperand(I1, oper_iter);
                     LLVMValueRef op_J = LLVMGetOperand(I2, oper_iter);
-                    if (op_I == op_J) 
+                    if (op_I == op_J)
                         ret = 1;
                     else
                     {
@@ -347,7 +346,6 @@ static int cseSupports(Instruction *i)
              LLVMIsATerminatorInst(I) ||
              LLVMIsAVAArgInst(I) ||
              LLVMIsAExtractValueInst(I));
-
 }
 
 static void doCSE(Function *F, BasicBlock *BB, Instruction *I, int depth)
@@ -380,6 +378,7 @@ static void doCSE(Function *F, BasicBlock *BB, Instruction *I, int depth)
     }
 }
 
+int move_to_next_store = 0;
 static void CommonSubexpressionElimination(Module *M)
 {
     // Implement this function
@@ -531,7 +530,7 @@ static void CommonSubexpressionElimination(Module *M)
 
     //                     LLVMValueRef I = wrap(&i_inst);
     //                     LLVMValueRef J = wrap(&inst);
-    //                     if((LLVMGetInstructionOpcode(J) == LLVMLoad) && (!(LLVMGetVolatile(J))) && (LLVMTypeOf(J)==LLVMTypeOf(LLVMGetOperand(I, 0))) &&(LLVMGetOperand(I, 1)== LLVMGetOperand(J, 0)))	 
+    //                     if((LLVMGetInstructionOpcode(J) == LLVMLoad) && (!(LLVMGetVolatile(J))) && (LLVMTypeOf(J)==LLVMTypeOf(LLVMGetOperand(I, 0))) &&(LLVMGetOperand(I, 1)== LLVMGetOperand(J, 0)))
     //                     // if (inst.getOpcode() == Instruction::Load && !inst.isVolatile() && i_inst.getOperand(1) == inst.getOperand(0) && inst.getType() == i_inst.getOperand(0)->getType())//&& i_inst.getType() == inst.getType() && i_inst.getOperand(0) == inst.getOperand(0))
     //                     {
     //                         CSEStore2Load++;
@@ -557,4 +556,73 @@ static void CommonSubexpressionElimination(Module *M)
     //         }
     //     }
     // }
+
+    for (auto F = M->begin(); F != M->end(); F++)
+    {
+        LLVMValueRef Function = wrap(&(*F));
+        // printf("\ninside functio");
+        LLVMBasicBlockRef BB; // points to each basic block one at a time
+        for (BB = LLVMGetFirstBasicBlock(Function); BB != NULL; BB = LLVMGetNextBasicBlock(BB))
+        {
+            // printf("\ninside BB");
+            LLVMValueRef inst_iter; // points to each instruction
+            inst_iter = LLVMGetFirstInstruction(BB);
+            while (inst_iter != NULL)
+            {
+                // LLVMDumpValue(inst_iter);
+                if (LLVMGetInstructionOpcode(inst_iter) == LLVMStore)
+                {
+                    LLVMValueRef inst_iter2; // points to each instruction
+                    inst_iter2 = LLVMGetNextInstruction(inst_iter);
+                    while (inst_iter2 != NULL)
+                    {
+                        // store to load forwarding
+                        if ((LLVMGetInstructionOpcode(inst_iter2) == LLVMLoad) &&
+                            (!(LLVMGetVolatile(inst_iter2))) &&
+                            (LLVMTypeOf(inst_iter2) == LLVMTypeOf(LLVMGetOperand(inst_iter, 0))) &&
+                            (LLVMGetOperand(inst_iter, 1) == LLVMGetOperand(inst_iter2, 0))) // same address
+                        {
+                            LLVMValueRef rm = inst_iter2;
+                            inst_iter2 = LLVMGetNextInstruction(inst_iter2);
+                            LLVMReplaceAllUsesWith(rm, LLVMGetOperand(inst_iter, 0));
+                            LLVMInstructionEraseFromParent(rm);
+                            CSE_Store2loads++;
+                            continue; // inst_iter2 has already been incremented. Continue checking next instruction
+                        }
+
+                        else if ((LLVMGetInstructionOpcode(inst_iter2) == LLVMStore) &&
+                                 (!(LLVMGetVolatile(inst_iter))) &&
+                                 (LLVMTypeOf(LLVMGetOperand(inst_iter2, 0)) == LLVMTypeOf(LLVMGetOperand(inst_iter, 0))) &&
+                                 (LLVMGetOperand(inst_iter, 1) == LLVMGetOperand(inst_iter2, 1)))
+                        {
+                            LLVMValueRef rm = inst_iter; // Notice": We remove the first store
+                            inst_iter = LLVMGetNextInstruction(inst_iter);
+                            LLVMInstructionEraseFromParent(rm);
+                            CSE_RStore++;
+                            // printf("\nincemrent inside elseif  redundant sotore ");
+                            move_to_next_store = 1;
+                            break;
+                        }
+                        else if (LLVMGetInstructionOpcode(inst_iter2) == LLVMStore ||
+                                 LLVMGetInstructionOpcode(inst_iter2) == LLVMCall ||
+                                 LLVMGetInstructionOpcode(inst_iter2) == LLVMLoad)
+                        {
+                            break;
+                        }
+
+                        inst_iter2 = LLVMGetNextInstruction(inst_iter2);
+                    }
+
+                    if (move_to_next_store == 1)
+                    {
+                        move_to_next_store = 0;
+                        continue;
+                    }
+                }
+
+                // printf("Hi");
+                inst_iter = LLVMGetNextInstruction(inst_iter);
+            }
+        }
+    }
 }
