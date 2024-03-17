@@ -491,10 +491,23 @@ static void CommonSubexpressionElimination(Module *M)
     //     }
     // }
 
-    // fprintf(stdout,"CSE_basic.......................%d\n",CSE_basic);
-    // fprintf(stdout,"CSE_Dead........................%d\n",CSEDead);
-    // fprintf(stdout,"CSE_Simplify....................%d\n",CSESimplify);
-    // fprintf(stdout,"CSE_Rloads......................%d\n",CSERLoad);
-    // fprintf(stdout,"CSE_Store2loads.................%d\n",CSEStore2loads);
-    // fprintf(stdout,"CSE_RStore......................%d\n",CSERStore);
+    for (auto f = M->begin(); f != M->end(); f++)
+    {
+        for (auto bb = f->begin(); bb != f->end(); bb++)
+        {
+            for (auto i = bb->begin(); i != bb->end();)
+            {
+                auto &inst = *i;
+                i++;
+
+                Value *val = simplifyInstruction(&inst, M->getDataLayout());
+                if (val)
+                {
+                    inst.replaceAllUsesWith(val);
+                    inst.eraseFromParent();
+                    CSESimplify++;
+                }
+            }
+        }
+    }
 }
