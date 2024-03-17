@@ -529,7 +529,7 @@ static void CommonSubexpressionElimination(Module *M)
                         auto &inst = *j;
                         j++;
 
-                        LLVMValueRef I = wrap(&i_isnt);
+                        LLVMValueRef I = wrap(&i_inst);
                         LLVMValueRef J = wrap(&inst);
                         if((LLVMGetInstructionOpcode(J) == LLVMLoad) && (!(LLVMGetVolatile(J))) && (LLVMTypeOf(J)==LLVMTypeOf(LLVMGetOperand(I, 0))) &&(LLVMGetOperand(I, 1)== LLVMGetOperand(J, 0)))	 
                         // if (inst.getOpcode() == Instruction::Load && !inst.isVolatile() && i_inst.getOperand(1) == inst.getOperand(0) && inst.getType() == i_inst.getOperand(0)->getType())//&& i_inst.getType() == inst.getType() && i_inst.getOperand(0) == inst.getOperand(0))
