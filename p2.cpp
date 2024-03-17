@@ -589,10 +589,6 @@ static void CommonSubexpressionElimination(Module *M)
     // optimization 2
     redundantLoad(M);
     redundantStore(M);
-    
-    cse(M);
-    simplify(M);
-    removeDead(M);
 
     // optimization 3
 
