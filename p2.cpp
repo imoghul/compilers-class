@@ -46,6 +46,11 @@
 #include "llvm/LinkAllPasses.h"
 #include "llvm/Support/ManagedStatic.h"
 #include "llvm/Support/SourceMgr.h"
+#include "llvm/IR/Module.h"
+#include "llvm/PassRegistry.h"
+#include "llvm/IR/IRBuilder.h"
+#include "llvm/Support/DataTypes.h"
+#include "llvm-c/Core.h"
 // #include "dominance.h"
 // #include "transform.h"
 
