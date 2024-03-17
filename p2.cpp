@@ -258,11 +258,23 @@ static bool isCSE(Instruction &i1, Instruction &i2)
 {
     if (&i1 == &i2)
         return false;
-    if (i1.getOpcode() != i2.getOpcode())
-        return false;
-    if (i1.getOpcode() == Instruction::Load || i1.getOpcode() == Instruction::Store)
-        return false;
+    // if (i1.getOpcode() != i2.getOpcode())
+    //     return false;
+    // if (i1.getOpcode() == Instruction::Load || i1.getOpcode() == Instruction::Store)
+    //     return false;
+    
 
+
+    // return true;
+    if(i1.getOpcode() == i2.getOpcode()) {
+        if(i1.getType() == i2.getType()){
+            if(i1.getNumOperands()==i2.getNumOperands()){
+                for(int i = 0;i<i1.getNumOperands();++i){
+                    if(i1.getOperand(i)!=i2.getOperand(i)) return false;
+                }
+            }
+        }
+    }
     return true;
 }
 
