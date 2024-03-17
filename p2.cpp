@@ -6,7 +6,6 @@
 #include <unistd.h>
 
 #include "llvm-c/Core.h"
-
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Verifier.h"
@@ -31,6 +30,22 @@
 #include "llvm/IR/BasicBlock.h"
 #include <set>
 #include "llvm/IR/InstIterator.h"
+#include "llvm-c/Core.h"
+#include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/Module.h"
+#include "llvm/IR/Verifier.h"
+#include "llvm/Bitcode/BitcodeWriter.h"
+#include "llvm/Bitcode/BitcodeReader.h"
+#include "llvm/ADT/StringSet.h"
+#include "llvm/ADT/Statistic.h"
+#include "llvm/IRReader/IRReader.h"
+#include "llvm/Support/CommandLine.h"
+#include "llvm/Support/ToolOutputFile.h"
+#include "llvm/Support/FileSystem.h"
+#include "llvm/IR/LegacyPassManager.h"
+#include "llvm/LinkAllPasses.h"
+#include "llvm/Support/ManagedStatic.h"
+#include "llvm/Support/SourceMgr.h"
 // #include "dominance.h"
 // #include "transform.h"
 
