@@ -338,6 +338,7 @@ static void CommonSubexpressionElimination(Module *M)
                 if (val)
                 {
                     inst.replaceAllUsesWith(val);
+                    inst.eraseFromParent();
                     CSESimplify++;
                 }
             }
