@@ -23,6 +23,14 @@
 #include "llvm/Support/ManagedStatic.h"
 #include "llvm/Support/SourceMgr.h"
 #include "llvm/Analysis/InstructionSimplify.h"
+#include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/Value.h"
+#include "llvm/IR/Module.h"
+#include "llvm/IR/Function.h"
+#include "llvm/IR/Constants.h"
+#include "llvm/IR/BasicBlock.h"
+#include <set>
+#include "llvm/IR/InstIterator.h"
 // #include "dominance.h"
 // #include "transform.h"
 
