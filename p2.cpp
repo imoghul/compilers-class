@@ -31,6 +31,12 @@ using namespace llvm;
 bool isDead(Instruction &I)
 {
 
+    if ( I.use_begin() == I.use_end() )
+    {
+        return true; // dead, but this is not enough
+    }
+
+
     int opcode = I.getOpcode();
     switch (opcode)
     {
@@ -98,12 +104,7 @@ bool isDead(Instruction &I)
         return false;
     }
 
-    if (I.use_begin() == I.use_end())
-    {
-        return true; // dead, but this is not enough
-    }
-
-    return 0;
+    return false;
 }
 
 static void CommonSubexpressionElimination(Module *);
@@ -491,23 +492,4 @@ static void CommonSubexpressionElimination(Module *M)
     //     }
     // }
 
-    for (auto f = M->begin(); f != M->end(); f++)
-    {
-        for (auto bb = f->begin(); bb != f->end(); bb++)
-        {
-            for (auto i = bb->begin(); i != bb->end();)
-            {
-                auto &inst = *i;
-                i++;
-
-                Value *val = simplifyInstruction(&inst, M->getDataLayout());
-                if (val)
-                {
-                    inst.replaceAllUsesWith(val);
-                    inst.eraseFromParent();
-                    CSESimplify++;
-                }
-            }
-        }
-    }
 }
