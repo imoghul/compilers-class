@@ -297,8 +297,8 @@ static bool isCSE(Instruction &i1, Instruction &i2)
 
     // return true;
 
-    LLVMValueRef I1 = wrap(i1);
-    LLVMValueRef I2 = wrap(i2);
+    LLVMValueRef I1 = wrap(&i1);
+    LLVMValueRef I2 = wrap(&i2);
 
     // if(i1.getOpcode() == i2.getOpcode()) {
     //     if(i1.getType() == i2.getType()){
