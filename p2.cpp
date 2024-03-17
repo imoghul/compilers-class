@@ -586,7 +586,7 @@ static void CommonSubexpressionElimination(Module *M)
                             inst_iter2 = LLVMGetNextInstruction(inst_iter2);
                             LLVMReplaceAllUsesWith(rm, LLVMGetOperand(inst_iter, 0));
                             LLVMInstructionEraseFromParent(rm);
-                            CSE_Store2loads++;
+                            CSEStore2Load++;
                             continue; // inst_iter2 has already been incremented. Continue checking next instruction
                         }
 
@@ -598,7 +598,7 @@ static void CommonSubexpressionElimination(Module *M)
                             LLVMValueRef rm = inst_iter; // Notice": We remove the first store
                             inst_iter = LLVMGetNextInstruction(inst_iter);
                             LLVMInstructionEraseFromParent(rm);
-                            CSE_RStore++;
+                            CSEStElim++;
                             // printf("\nincemrent inside elseif  redundant sotore ");
                             move_to_next_store = 1;
                             break;
