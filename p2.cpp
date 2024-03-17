@@ -56,6 +56,11 @@
 
 using namespace llvm;
 
+extern "C" {
+    static bool isCSE(Instruction &i1, Instruction &i2);
+}
+
+
 bool isDead(Instruction &I)
 {
 
