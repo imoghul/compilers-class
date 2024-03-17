@@ -61,7 +61,7 @@ extern "C"
     static bool isCSE(Instruction &i1, Instruction &i2);
     static int cseSupports(Instruction *i);
     static void CommonSubexpressionElimination(Module *M);
-    static void redundantStore(Module* M);
+    static void redundantStore(Module *M);
 }
 
 bool isDead(Instruction &I)
@@ -349,7 +349,7 @@ static int cseSupports(Instruction *i)
              LLVMIsAExtractValueInst(I));
 }
 
-static void doCSE(Function *F, BasicBlock *BB, Instruction *I, int depth)
+static void doCSE(Function *F, BasicBlock *BB, Instruction *I)
 {
     if (!cseSupports((Instruction *)I))
         return;
@@ -365,7 +365,7 @@ static void doCSE(Function *F, BasicBlock *BB, Instruction *I, int depth)
             inst.eraseFromParent();
             CSEElim++;
         }
-        break;
+        // break;
     }
 
     auto DT = new DominatorTreeBase<BasicBlock, false>(); // make a new one
@@ -375,11 +375,12 @@ static void doCSE(Function *F, BasicBlock *BB, Instruction *I, int depth)
 
     for (DomTreeNodeBase<BasicBlock> **child = Node->begin(); child != Node->end(); child++)
     {
-        doCSE(F, (*child)->getBlock(), I, depth + 1);
+        doCSE(F, (*child)->getBlock(), I);
     }
 }
 
-static void simplify(Module* M){
+static void simplify(Module *M)
+{
     for (auto f = M->begin(); f != M->end(); f++)
     {
         for (auto bb = f->begin(); bb != f->end(); bb++)
@@ -401,8 +402,9 @@ static void simplify(Module* M){
     }
 }
 
-static void removeDead(Module* M){
-for (auto f = M->begin(); f != M->end(); f++)
+static void removeDead(Module *M)
+{
+    for (auto f = M->begin(); f != M->end(); f++)
     {
         for (auto bb = f->begin(); bb != f->end(); bb++)
         {
@@ -421,7 +423,8 @@ for (auto f = M->begin(); f != M->end(); f++)
     }
 }
 
-static void cse(Module* M){
+static void cse(Module *M)
+{
     for (auto F = M->begin(); F != M->end(); F++)
     {
         for (auto BB = F->begin(); BB != F->end(); BB++)
@@ -446,7 +449,7 @@ static void cse(Module* M){
                         inst.eraseFromParent();
                         CSEElim++;
                     }
-                    break;
+                    // break;
                 }
 
                 // iterate over each child of BB
@@ -456,19 +459,20 @@ static void cse(Module* M){
                 DomTreeNodeBase<BasicBlock> *Node = DT->getNode(&*BB); // get node for BB
                 for (DomTreeNodeBase<BasicBlock> **child = Node->begin(); child != Node->end(); child++)
                 {
-                    doCSE(&(*F), (*child)->getBlock(), &(*i), 0);
+                    doCSE(&(*F), (*child)->getBlock(), &(*i));
                 }
 
                 delete DT;
-                break;
+                // break;
             }
-            break;
+            // break;
         }
-        break;
+        // break;
     }
 }
 
-static void redundantLoad(Module* M){
+static void redundantLoad(Module *M)
+{
     for (auto F = M->begin(); F != M->end(); F++)
     {
         for (auto BB = F->begin(); BB != F->end(); BB++)
@@ -503,7 +507,8 @@ static void redundantLoad(Module* M){
     }
 }
 
-static void redundantStore(Module* M){
+static void redundantStore(Module *M)
+{
     static int move_to_next_store = 0;
     for (auto F = M->begin(); F != M->end(); F++)
     {
@@ -575,76 +580,14 @@ static void redundantStore(Module* M){
     }
 }
 
-
 static void CommonSubexpressionElimination(Module *M)
 {
     // Implement this function
-    
-    // Optimization 0&1
+
     simplify(M);
     removeDead(M);
-    // CSE
     cse(M);
-
-    // optimization 2
     redundantLoad(M);
     redundantStore(M);
-
-    // optimization 3
-
-    // for (auto F = M->begin(); F != M->end(); F++)
-    // {
-    //     for (auto BB = F->begin(); BB != F->end(); BB++)
-    //     {
-
-    //         for (auto i = BB->begin(); i != BB->end(); )
-    //         {
-
-    //             auto& i_inst = *i;
-    //             auto old_i = i;
-    //             ++i;
-
-    //             if (i_inst.getOpcode() == Instruction::Store)
-    //             {
-    //                 auto j = old_i;
-    //                 if (j == BB->end())
-    //                     break;
-    //                 j++;
-    //                 if (j == BB->end())
-    //                     break;
-    //                 for (; j != BB->end();)
-    //                 {
-    //                     auto &inst = *j;
-    //                     j++;
-
-    //                     LLVMValueRef I = wrap(&i_inst);
-    //                     LLVMValueRef J = wrap(&inst);
-    //                     if((LLVMGetInstructionOpcode(J) == LLVMLoad) && (!(LLVMGetVolatile(J))) && (LLVMTypeOf(J)==LLVMTypeOf(LLVMGetOperand(I, 0))) &&(LLVMGetOperand(I, 1)== LLVMGetOperand(J, 0)))
-    //                     // if (inst.getOpcode() == Instruction::Load && !inst.isVolatile() && i_inst.getOperand(1) == inst.getOperand(0) && inst.getType() == i_inst.getOperand(0)->getType())//&& i_inst.getType() == inst.getType() && i_inst.getOperand(0) == inst.getOperand(0))
-    //                     {
-    //                         CSEStore2Load++;
-    //                         inst.replaceAllUsesWith((Value *)(&(*old_i)));
-    //                         inst.eraseFromParent();
-    //                         continue;
-    //                     }
-    //                     else if((LLVMGetInstructionOpcode(J) == LLVMStore) && (!(LLVMGetVolatile(I))) && (LLVMTypeOf(LLVMGetOperand(J, 0))==LLVMTypeOf(LLVMGetOperand(I, 0))) && (LLVMGetOperand(I, 1)== LLVMGetOperand(J, 1)))
-    //                     // else if(inst.getOpcode() == Instruction::Store && !i_inst.isVolatile() && i_inst.getOperand(1) == inst.getOperand(1) && i_inst.getOperand(0)->getType() == inst.getOperand(0)->getType()){
-    //                     {
-    //                         i_inst.eraseFromParent();
-    //                         CSEStElim++;
-    //                         break;
-    //                     }
-    //                     else if(LLVMGetInstructionOpcode(J) == LLVMStore || LLVMGetInstructionOpcode(J) == LLVMCall || LLVMGetInstructionOpcode(J) == LLVMLoad)
-    //                     // else if(inst.getOpcode() == Instruction::Store || inst.getOpcode() == Instruction::Load){
-    //                     {
-    //                         break;
-    //                     }
-
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
-
-    
+    cse(M);
 }
