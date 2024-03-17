@@ -504,6 +504,7 @@ static void redundantLoad(Module* M){
 }
 
 static void redundantStore(Module* M){
+    static int move_to_next_store = 0;
     for (auto F = M->begin(); F != M->end(); F++)
     {
         LLVMValueRef Function = wrap(&(*F));
@@ -574,7 +575,7 @@ static void redundantStore(Module* M){
     }
 }
 
-int move_to_next_store = 0;
+
 static void CommonSubexpressionElimination(Module *M)
 {
     // Implement this function
