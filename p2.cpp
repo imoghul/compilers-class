@@ -31,11 +31,10 @@ using namespace llvm;
 bool isDead(Instruction &I)
 {
 
-    if ( I.use_begin() != I.use_end() )
+    if (I.use_begin() != I.use_end())
     {
         return false; // dead, but this is not enough
     }
-
 
     int opcode = I.getOpcode();
     switch (opcode)
@@ -262,20 +261,62 @@ static bool isCSE(Instruction &i1, Instruction &i2)
     //     return false;
     // if (i1.getOpcode() == Instruction::Load || i1.getOpcode() == Instruction::Store)
     //     return false;
-    
-
 
     // return true;
-    if(i1.getOpcode() == i2.getOpcode()) {
-        if(i1.getType() == i2.getType()){
-            if(i1.getNumOperands()==i2.getNumOperands()){
-                for(int i = 0;i<i1.getNumOperands();++i){
-                    if(i1.getOperand(i)!=i2.getOperand(i)) return false;
+
+    LLVMValueRef I1 = wrap(i1);
+    LLVMValueRef I2 = wrap(i2);
+
+    // if(i1.getOpcode() == i2.getOpcode()) {
+    //     if(i1.getType() == i2.getType()){
+    //         if(i1.getNumOperands()==i2.getNumOperands()){
+    //             for(int i = 0;i<i1.getNumOperands();++i){
+    //                 if(i1.getOperand(i)!=i2.getOperand(i)) return false;
+    //             }
+    //         }
+    //     }
+    // }
+
+    bool flag = 0;
+    if (LLVMIsAICmpInst(I1))
+    {
+        if (LLVMGetICmpPredicate(I1) != LLVMGetICmpPredicate(I2))
+        {
+            flag = 0;
+        }
+    }
+
+    if (LLVMIsAFCmpInst(I1))
+    {
+        if (LLVMGetFCmpPredicate(I1) != LLVMGetFCmpPredicate(I2))
+        {
+            flag = 0;
+        }
+    }
+    if (LLVMGetInstructionOpcode(I1) == LLVMGetInstructionOpcode(I2)) 
+    {
+        if (LLVMTypeOf(I1) == LLVMTypeOf(I2)) 
+        {
+            if (LLVMGetNumOperands(I1) == LLVMGetNumOperands(I2)) 
+            {
+                int oper_iter;
+                for (oper_iter = 0; oper_iter < LLVMGetNumOperands(I1); oper_iter++)
+                {
+                    LLVMValueRef op_I = LLVMGetOperand(I1, oper_iter);
+                    LLVMValueRef op_J = LLVMGetOperand(I2, oper_iter);
+                    if (op_I == op_J) 
+                        flag = 1;
+                    else
+                    {
+                        flag = 0;
+                        break;
+                    }
                 }
             }
         }
     }
-    return true;
+    return flag;
+    // return true;
 }
 
 static int cseSupports(Instruction *I)
@@ -503,5 +544,4 @@ static void CommonSubexpressionElimination(Module *M)
     //         }
     //     }
     // }
-
 }
