@@ -31,10 +31,6 @@ using namespace llvm;
 bool isDead(Instruction &I)
 {
 
-    if ( I.use_begin() == I.use_end() )
-    {
-        return true; // dead, but this is not enough
-    }
 
 
     int opcode = I.getOpcode();
