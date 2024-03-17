@@ -62,6 +62,80 @@ extern "C"
     static int cseSupports(Instruction *i);
     static void CommonSubexpressionElimination(Module *M);
     static void redundantStore(Module *M);
+    static void cse(Module *M);
+    static void processInst(LLVMBasicBlockRef BB, LLVMValueRef I, int flag);
+}
+
+static void processInst(LLVMBasicBlockRef BB, LLVMValueRef I, int flag)
+{
+
+    if (!canHandle(I))
+    {
+        // printf("\n I cant handle");
+        return;
+    }
+    else // can handle
+    {
+        if (flag == 0)
+        {
+            LLVMValueRef inst_iter = LLVMGetNextInstruction(I); // points to each instruction
+            while (inst_iter != NULL)
+            {
+                // printf("\nBefore CSE");
+                // printf("\ncommonSubexpression(I, inst_iter) : %d",x );
+                if (commonSubexpression(I, inst_iter))
+                {
+                    // printf("\nCSE inside the same block ");
+                    LLVMValueRef rm = inst_iter;
+                    // update iterator first, before erasing
+                    inst_iter = LLVMGetNextInstruction(inst_iter);
+                    LLVMReplaceAllUsesWith(rm, I);
+                    LLVMInstructionEraseFromParent(rm);
+                    total_deleted_instructions++;
+                    CSE_basic++;
+                    continue;
+                }
+                // printf("\nsa");
+                inst_iter = LLVMGetNextInstruction(inst_iter);
+                // printf("\nks");
+            }
+
+            // for each dom-tree child of BB:
+            // processInst(child)
+            LLVMBasicBlockRef child_BB;
+            for (child_BB = LLVMFirstDomChild(BB); child_BB != NULL; child_BB = LLVMNextDomChild(BB, child_BB))
+            {
+                processInst(child_BB, I, 1);
+            }
+        }
+
+        else if (flag == 1)
+
+        {
+            LLVMValueRef insn_child = LLVMGetFirstInstruction(BB);
+            while (insn_child != NULL)
+            {
+                if (commonSubexpression(I, insn_child))
+                {
+                    LLVMValueRef rm = insn_child;
+                    // update iterator first, before erasing
+                    insn_child = LLVMGetNextInstruction(insn_child);
+                    LLVMReplaceAllUsesWith(rm, I);
+                    LLVMInstructionEraseFromParent(rm);
+                    total_deleted_instructions++;
+                    CSE_basic++;
+                    continue;
+                }
+                insn_child = LLVMGetNextInstruction(insn_child);
+            }
+
+            LLVMBasicBlockRef child_BB;
+            for (child_BB = LLVMFirstDomChild(BB); child_BB != NULL; child_BB = LLVMNextDomChild(BB, child_BB))
+            {
+                processInst(child_BB, I, 1);
+            }
+        }
+    }
 }
 
 bool isDead(Instruction &I)
@@ -427,47 +501,58 @@ static void cse(Module *M)
 {
     for (auto F = M->begin(); F != M->end(); F++)
     {
-        for (auto BB = F->begin(); BB != F->end(); BB++)
+        // for (auto BB = F->begin(); BB != F->end(); BB++)
+        // {
+
+        //     for (auto i = BB->begin(); i != BB->end(); i++)
+        //     {
+        //         for (auto j = i; j != BB->end();)
+        //         {
+        //             if (&(*i) == &(*j))
+        //             {
+        //                 ++j;
+        //                 continue;
+        //             }
+
+        //             auto &inst = *j;
+        //             j++;
+        //             if (isCSE(*i, inst))
+        //             {
+        //                 // replace uses and stuff
+        //                 inst.replaceAllUsesWith((Value *)(&(*i)));
+        //                 inst.eraseFromParent();
+        //                 CSEElim++;
+        //             }
+        //             // break;
+        //         }
+
+        //         // iterate over each child of BB
+        //         auto DT = new DominatorTreeBase<BasicBlock, false>(); // make a new one
+        //         DT->recalculate(*F);                                  // calculate for a new function F
+
+        //         DomTreeNodeBase<BasicBlock> *Node = DT->getNode(&*BB); // get node for BB
+        //         for (DomTreeNodeBase<BasicBlock> **child = Node->begin(); child != Node->end(); child++)
+        //         {
+        //             doCSE(&(*F), (*child)->getBlock(), &(*i));
+        //         }
+
+        //         delete DT;
+        //         // break;
+        //     }
+        //     // break;
+        // }
+        // // break;
+        LLVMValueRef Function = wrap(&(*F));
+        LLVMBasicBlockRef BB; // points to each basic block one at a time
+        for (BB = LLVMGetFirstBasicBlock(Function); BB != NULL; BB = LLVMGetNextBasicBlock(BB))
         {
 
-            for (auto i = BB->begin(); i != BB->end(); i++)
+            LLVMValueRef inst_iter; // points to each instruction
+            for (inst_iter = LLVMGetFirstInstruction(BB); inst_iter != NULL; inst_iter = LLVMGetNextInstruction(inst_iter))
             {
-                for (auto j = i; j != BB->end();)
-                {
-                    if (&(*i) == &(*j))
-                    {
-                        ++j;
-                        continue;
-                    }
-
-                    auto &inst = *j;
-                    j++;
-                    if (isCSE(*i, inst))
-                    {
-                        // replace uses and stuff
-                        inst.replaceAllUsesWith((Value *)(&(*i)));
-                        inst.eraseFromParent();
-                        CSEElim++;
-                    }
-                    // break;
-                }
-
-                // iterate over each child of BB
-                auto DT = new DominatorTreeBase<BasicBlock, false>(); // make a new one
-                DT->recalculate(*F);                                  // calculate for a new function F
-
-                DomTreeNodeBase<BasicBlock> *Node = DT->getNode(&*BB); // get node for BB
-                for (DomTreeNodeBase<BasicBlock> **child = Node->begin(); child != Node->end(); child++)
-                {
-                    doCSE(&(*F), (*child)->getBlock(), &(*i));
-                }
-
-                delete DT;
-                // break;
+                processInst(BB, inst_iter, 0);
             }
-            // break;
         }
-        // break;
     }
 }
 
