@@ -58,6 +58,7 @@ using namespace llvm;
 
 extern "C" {
     static bool isCSE(Instruction &i1, Instruction &i2);
+    static int cseSupports(Instruction *i);
 }
 
 
@@ -290,40 +291,22 @@ static bool isCSE(Instruction &i1, Instruction &i2)
 {
     if (&i1 == &i2)
         return false;
-    // if (i1.getOpcode() != i2.getOpcode())
-    //     return false;
-    // if (i1.getOpcode() == Instruction::Load || i1.getOpcode() == Instruction::Store)
-    //     return false;
-
-    // return true;
 
     LLVMValueRef I1 = wrap(&i1);
     LLVMValueRef I2 = wrap(&i2);
 
-    // if(i1.getOpcode() == i2.getOpcode()) {
-    //     if(i1.getType() == i2.getType()){
-    //         if(i1.getNumOperands()==i2.getNumOperands()){
-    //             for(int i = 0;i<i1.getNumOperands();++i){
-    //                 if(i1.getOperand(i)!=i2.getOperand(i)) return false;
-    //             }
-    //         }
-    //     }
-    // }
 
-    bool flag = 0;
-    if (LLVMIsAICmpInst(I1))
+    bool ret = 0;
+    if (LLVMIsAICmpInst(I1) && (LLVMGetICmpPredicate(I1) != LLVMGetICmpPredicate(I2)))
     {
-        if (LLVMGetICmpPredicate(I1) != LLVMGetICmpPredicate(I2))
-        {
-            flag = 0;
-        }
+        ret = 0;
     }
 
     if (LLVMIsAFCmpInst(I1))
     {
         if (LLVMGetFCmpPredicate(I1) != LLVMGetFCmpPredicate(I2))
         {
-            flag = 0;
+            ret = 0;
         }
     }
     if (LLVMGetInstructionOpcode(I1) == LLVMGetInstructionOpcode(I2)) 
@@ -338,43 +321,32 @@ static bool isCSE(Instruction &i1, Instruction &i2)
                     LLVMValueRef op_I = LLVMGetOperand(I1, oper_iter);
                     LLVMValueRef op_J = LLVMGetOperand(I2, oper_iter);
                     if (op_I == op_J) 
-                        flag = 1;
+                        ret = 1;
                     else
                     {
-                        flag = 0;
+                        ret = 0;
                         break;
                     }
                 }
             }
         }
     }
-    return flag;
-    // return true;
+    return ret;
 }
 
-static int cseSupports(Instruction *I)
+static int cseSupports(Instruction *i)
 {
-    // return !(LLVMIsALoadInst(I) ||
-    //          LLVMIsAStoreInst(I) ||
-    //          LLVMIsAPHINode(I) ||
-    //          LLVMIsACallInst(I) ||
-    //          LLVMIsAAllocaInst(I) ||
-    //          LLVMIsAFCmpInst(I) ||
-    //          LLVMIsATerminatorInst(I) ||
-    //          LLVMIsAVAArgInst(I) ||
-    //          LLVMIsAExtractValueInst(I));
+    LLVMValueRef I = wrap(i);
+    return !(LLVMIsALoadInst(I) ||
+             LLVMIsAStoreInst(I) ||
+             LLVMIsAPHINode(I) ||
+             LLVMIsACallInst(I) ||
+             LLVMIsAAllocaInst(I) ||
+             LLVMIsAFCmpInst(I) ||
+             LLVMIsATerminatorInst(I) ||
+             LLVMIsAVAArgInst(I) ||
+             LLVMIsAExtractValueInst(I));
 
-    int opcode = I->getOpcode();
-    switch (opcode)
-    {
-
-    case Instruction::Load:
-    case Instruction::Store:
-    case Instruction::PHI:
-        // TODO: add rest
-        return false;
-    }
-    return true;
 }
 
 static void doCSE(Function *F, BasicBlock *BB, Instruction *I, int depth)
