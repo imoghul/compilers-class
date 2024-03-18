@@ -658,24 +658,21 @@ static void cse(Module *M)
 
             for (auto i = BB->begin(); i != BB->end(); i++)
             {
-                if (!canHandle(wrap(&(*i))))
+                if (!canHandle(wrap(&(*i)))) continue;
+                
+                LLVMValueRef inst = LLVMGetNextInstruction(wrap(&(*i)));
+                while (inst != NULL)
                 {
-                    continue;
-                    ;
-                }
-                LLVMValueRef inst_iter = LLVMGetNextInstruction(wrap(&(*i)));
-                while (inst_iter != NULL)
-                {
-                    if (commonSubexpression(wrap(&(*i)), inst_iter))
+                    LLVMValueRef temp = inst;
+                    inst = LLVMGetNextInstruction(inst);
+                    if (commonSubexpression(wrap(&(*i)), inst))
                     {
-                        LLVMValueRef rm = inst_iter;
-                        inst_iter = LLVMGetNextInstruction(inst_iter);
-                        LLVMReplaceAllUsesWith(rm, wrap(&(*i)));
-                        LLVMInstructionEraseFromParent(rm);
+                        
+                        LLVMReplaceAllUsesWith(temp, wrap(&(*i)));
+                        LLVMInstructionEraseFromParent(temp);
                         CSEElim++;
                         continue;
                     }
-                    inst_iter = LLVMGetNextInstruction(inst_iter);
                 }
 
                 LLVMBasicBlockRef child_BB;
