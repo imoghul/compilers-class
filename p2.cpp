@@ -649,7 +649,7 @@ static void redundantStore(Module *M)
                 {
                     LLVMValueRef j;
                     j = LLVMGetNextInstruction(i);
-                    while (temp_j != NULL)
+                    while (j != NULL)
                     {
 
                         LLVMValueRef temp_j = j;
