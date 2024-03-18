@@ -461,7 +461,7 @@ static bool isCSE(Instruction &i1, Instruction &i2)
     {
         ret = false;
     }
-    if (LLVMGetInstructionOpcode(I1) == LLVMGetInstructionOpcode(I2) && LLVMTypeOf(I1) == LLVMTypeOf(I2) &7 LLVMGetNumOperands(I1) == LLVMGetNumOperands(I2))
+    if (LLVMGetInstructionOpcode(I1) == LLVMGetInstructionOpcode(I2) && LLVMTypeOf(I1) == LLVMTypeOf(I2) && LLVMGetNumOperands(I1) == LLVMGetNumOperands(I2))
     {
         
         for (int i = 0; i < LLVMGetNumOperands(I1); i++)
