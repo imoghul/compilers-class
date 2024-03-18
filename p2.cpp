@@ -477,7 +477,7 @@ static bool commonSubexpression(LLVMValueRef I, LLVMValueRef J)
                 int oper_iter;
                 for (oper_iter = 0; oper_iter < LLVMGetNumOperands(I); oper_iter++)
                 {
-                    ret = (LLVMGetOperand(I, oper_iter) == LLVMGetOperand(J, oper_iter))
+                    ret = (LLVMGetOperand(I, oper_iter) == LLVMGetOperand(J, oper_iter));
                         
                     if(!ret)
                     {
