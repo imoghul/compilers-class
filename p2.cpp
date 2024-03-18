@@ -463,15 +463,15 @@ static bool isCSE(Instruction &i1, Instruction &i2)
     }
     if (LLVMGetInstructionOpcode(I1) == LLVMGetInstructionOpcode(I2) && LLVMTypeOf(I1) == LLVMTypeOf(I2) && LLVMGetNumOperands(I1) == LLVMGetNumOperands(I2))
     {
-        
+
         for (int i = 0; i < LLVMGetNumOperands(I1); i++)
         {
             LLVMValueRef a = LLVMGetOperand(I1, i);
             LLVMValueRef b = LLVMGetOperand(I2, i);
             ret = a == b;
-            if(!ret) return false;
+            if (!ret)
+                return false;
         }
-            
     }
     return ret;
 }
@@ -507,8 +507,8 @@ static void doCSE(Function *F, BasicBlock *BB, Instruction *I)
         }
     }
 
-    auto DT = new DominatorTreeBase<BasicBlock, false>(); 
-    DT->recalculate(*F);                                  
+    auto DT = new DominatorTreeBase<BasicBlock, false>();
+    DT->recalculate(*F);
 
     DomTreeNodeBase<BasicBlock> *Node = DT->getNode(&*BB);
 
@@ -553,7 +553,7 @@ static int commonSubexpression(LLVMValueRef I, LLVMValueRef J)
     }
     if (LLVMGetInstructionOpcode(I) == LLVMGetInstructionOpcode(J))
     {
-        if (LLVMTypeOf(I) == LLVMTypeOf(J)) 
+        if (LLVMTypeOf(I) == LLVMTypeOf(J))
         {
             if (LLVMGetNumOperands(I) == LLVMGetNumOperands(J))
             {
@@ -562,7 +562,7 @@ static int commonSubexpression(LLVMValueRef I, LLVMValueRef J)
                 {
                     LLVMValueRef op_I = LLVMGetOperand(I, oper_iter);
                     LLVMValueRef op_J = LLVMGetOperand(J, oper_iter);
-                    if (op_I == op_J) 
+                    if (op_I == op_J)
                         flag = 1;
                     else
                     {
@@ -583,56 +583,25 @@ static void processInst(LLVMBasicBlockRef BB, LLVMValueRef I, int flag)
     {
         return;
     }
-    else 
+    LLVMValueRef insn_child = LLVMGetFirstInstruction(BB);
+    while (insn_child != NULL)
     {
-        if (flag == 0)
+        if (commonSubexpression(I, insn_child))
         {
-            LLVMValueRef inst_iter = LLVMGetNextInstruction(I); 
-            while (inst_iter != NULL)
-            {
-                if (commonSubexpression(I, inst_iter))
-                {
-                    LLVMValueRef rm = inst_iter;
-                    inst_iter = LLVMGetNextInstruction(inst_iter);
-                    LLVMReplaceAllUsesWith(rm, I);
-                    LLVMInstructionEraseFromParent(rm);
-                    CSEElim++;
-                    continue;
-                }
-                inst_iter = LLVMGetNextInstruction(inst_iter);
-            }
-
-            LLVMBasicBlockRef child_BB;
-            for (child_BB = LLVMFirstDomChild(BB); child_BB != NULL; child_BB = LLVMNextDomChild(BB, child_BB))
-            {
-                processInst(child_BB, I, 1);
-            }
+            LLVMValueRef rm = insn_child;
+            insn_child = LLVMGetNextInstruction(insn_child);
+            LLVMReplaceAllUsesWith(rm, I);
+            LLVMInstructionEraseFromParent(rm);
+            CSEElim++;
+            continue;
         }
+        insn_child = LLVMGetNextInstruction(insn_child);
+    }
 
-        else if (flag == 1)
-
-        {
-            LLVMValueRef insn_child = LLVMGetFirstInstruction(BB);
-            while (insn_child != NULL)
-            {
-                if (commonSubexpression(I, insn_child))
-                {
-                    LLVMValueRef rm = insn_child;
-                    insn_child = LLVMGetNextInstruction(insn_child);
-                    LLVMReplaceAllUsesWith(rm, I);
-                    LLVMInstructionEraseFromParent(rm);
-                    CSEElim++;
-                    continue;
-                }
-                insn_child = LLVMGetNextInstruction(insn_child);
-            }
-
-            LLVMBasicBlockRef child_BB;
-            for (child_BB = LLVMFirstDomChild(BB); child_BB != NULL; child_BB = LLVMNextDomChild(BB, child_BB))
-            {
-                processInst(child_BB, I, 1);
-            }
-        }
+    LLVMBasicBlockRef child_BB;
+    for (child_BB = LLVMFirstDomChild(BB); child_BB != NULL; child_BB = LLVMNextDomChild(BB, child_BB))
+    {
+        processInst(child_BB, I);
     }
 }
 
@@ -691,9 +660,10 @@ static void cse(Module *M)
             {
                 if (!canHandle(wrap(&(*i))))
                 {
-                    continue;;
+                    continue;
+                    ;
                 }
-                LLVMValueRef inst_iter = LLVMGetNextInstruction(wrap(&(*i))); 
+                LLVMValueRef inst_iter = LLVMGetNextInstruction(wrap(&(*i)));
                 while (inst_iter != NULL)
                 {
                     if (commonSubexpression(wrap(&(*i)), inst_iter))
@@ -711,7 +681,7 @@ static void cse(Module *M)
                 LLVMBasicBlockRef child_BB;
                 for (child_BB = LLVMFirstDomChild(wrap(&(*BB))); child_BB != NULL; child_BB = LLVMNextDomChild(wrap(&(*BB)), child_BB))
                 {
-                    processInst(child_BB, wrap(&(*i)), 1);
+                    processInst(child_BB, wrap(&(*i)));
                 }
                 // processInst(BB, inst_iter, 0);
             }
@@ -777,14 +747,14 @@ static void redundantStore(Module *M)
                         if ((LLVMGetInstructionOpcode(inst_iter2) == LLVMLoad) &&
                             (!(LLVMGetVolatile(inst_iter2))) &&
                             (LLVMTypeOf(inst_iter2) == LLVMTypeOf(LLVMGetOperand(inst_iter, 0))) &&
-                            (LLVMGetOperand(inst_iter, 1) == LLVMGetOperand(inst_iter2, 0))) 
+                            (LLVMGetOperand(inst_iter, 1) == LLVMGetOperand(inst_iter2, 0)))
                         {
                             LLVMValueRef rm = inst_iter2;
                             inst_iter2 = LLVMGetNextInstruction(inst_iter2);
                             LLVMReplaceAllUsesWith(rm, LLVMGetOperand(inst_iter, 0));
                             LLVMInstructionEraseFromParent(rm);
                             CSEStore2Load++;
-                            continue; 
+                            continue;
                         }
 
                         else if ((LLVMGetInstructionOpcode(inst_iter2) == LLVMStore) &&
@@ -796,7 +766,7 @@ static void redundantStore(Module *M)
                             inst_iter = LLVMGetNextInstruction(inst_iter);
                             LLVMInstructionEraseFromParent(rm);
                             CSEStElim++;
-                            
+
                             move_to_next_store = 1;
                             break;
                         }
