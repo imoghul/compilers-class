@@ -87,7 +87,7 @@ extern "C"
     static void CommonSubexpressionElimination(Module *M);
     static void redundantStore(Module *M);
     static void cse(Module *M);
-    static void processInst(LLVMBasicBlockRef BB, LLVMValueRef I, int flag);
+    static void processInst(LLVMBasicBlockRef BB, LLVMValueRef I);
 }
 Function *Current = NULL;
 DominatorTreeBase<BasicBlock, false> *DT = NULL;
@@ -576,7 +576,7 @@ static int commonSubexpression(LLVMValueRef I, LLVMValueRef J)
     return flag;
 }
 
-static void processInst(LLVMBasicBlockRef BB, LLVMValueRef I, int flag)
+static void processInst(LLVMBasicBlockRef BB, LLVMValueRef I)
 {
 
     if (!canHandle(I))
