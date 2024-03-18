@@ -634,7 +634,7 @@ static void redundantLoad(Module *M)
 
 static void redundantStore(Module *M)
 {
-    static int move_to_next_store = 0;
+    // static int move_to_next_store = 0;
     for (auto F = M->begin(); F != M->end(); F++)
     {
         LLVMValueRef Function = wrap(&(*F));
@@ -676,7 +676,7 @@ static void redundantStore(Module *M)
                             LLVMInstructionEraseFromParent(rm);
                             CSEStElim++;
 
-                            move_to_next_store = 1;
+                            // move_to_next_store = 1;
                             break;
                         }
                         if (LLVMGetInstructionOpcode(temp_j) == LLVMStore ||
@@ -689,11 +689,11 @@ static void redundantStore(Module *M)
                         // j = LLVMGetNextInstruction(j);
                     }
 
-                    if (move_to_next_store == 1)
-                    {
-                        move_to_next_store = 0;
-                        continue;
-                    }
+                    // if (move_to_next_store == 1)
+                    // {
+                    //     move_to_next_store = 0;
+                    //     continue;
+                    // }
                 }
 
                 i = LLVMGetNextInstruction(i);
