@@ -465,7 +465,7 @@ static int canHandle(LLVMValueRef I)
 static bool commonSubexpression(LLVMValueRef I, LLVMValueRef J)
 {
 
-    int ret = true;
+    int ret = false;
 
     if ((LLVMIsAICmpInst(I) && LLVMGetICmpPredicate(I) != LLVMGetICmpPredicate(J)) ||  (LLVMIsAFCmpInst(I) && LLVMGetFCmpPredicate(I) != LLVMGetFCmpPredicate(J)))
     {
@@ -641,50 +641,50 @@ static void redundantStore(Module *M)
         LLVMBasicBlockRef BB;
         for (BB = LLVMGetFirstBasicBlock(Function); BB != NULL; BB = LLVMGetNextBasicBlock(BB))
         {
-            LLVMValueRef inst_iter;
-            inst_iter = LLVMGetFirstInstruction(BB);
-            while (inst_iter != NULL)
+            LLVMValueRef i;
+            i = LLVMGetFirstInstruction(BB);
+            while (i != NULL)
             {
-                if (LLVMGetInstructionOpcode(inst_iter) == LLVMStore)
+                if (LLVMGetInstructionOpcode(i) == LLVMStore)
                 {
-                    LLVMValueRef inst_iter2;
-                    inst_iter2 = LLVMGetNextInstruction(inst_iter);
-                    while (inst_iter2 != NULL)
+                    LLVMValueRef j;
+                    j = LLVMGetNextInstruction(i);
+                    while (j != NULL)
                     {
-                        if ((LLVMGetInstructionOpcode(inst_iter2) == LLVMLoad) &&
-                            (!(LLVMGetVolatile(inst_iter2))) &&
-                            (LLVMTypeOf(inst_iter2) == LLVMTypeOf(LLVMGetOperand(inst_iter, 0))) &&
-                            (LLVMGetOperand(inst_iter, 1) == LLVMGetOperand(inst_iter2, 0)))
+                        if ((LLVMGetInstructionOpcode(j) == LLVMLoad) &&
+                            (!(LLVMGetVolatile(j))) &&
+                            (LLVMGetOperand(i, 1) == LLVMGetOperand(j, 0)) &&
+                            (LLVMTypeOf(j) == LLVMTypeOf(LLVMGetOperand(i, 0))))
                         {
-                            LLVMValueRef rm = inst_iter2;
-                            inst_iter2 = LLVMGetNextInstruction(inst_iter2);
-                            LLVMReplaceAllUsesWith(rm, LLVMGetOperand(inst_iter, 0));
+                            LLVMValueRef rm = j;
+                            j = LLVMGetNextInstruction(j);
+                            LLVMReplaceAllUsesWith(rm, LLVMGetOperand(i, 0));
                             LLVMInstructionEraseFromParent(rm);
                             CSEStore2Load++;
                             continue;
                         }
 
-                        else if ((LLVMGetInstructionOpcode(inst_iter2) == LLVMStore) &&
-                                 (!(LLVMGetVolatile(inst_iter))) &&
-                                 (LLVMTypeOf(LLVMGetOperand(inst_iter2, 0)) == LLVMTypeOf(LLVMGetOperand(inst_iter, 0))) &&
-                                 (LLVMGetOperand(inst_iter, 1) == LLVMGetOperand(inst_iter2, 1)))
+                        if ((LLVMGetInstructionOpcode(j) == LLVMStore) &&
+                                 (!(LLVMGetVolatile(i))) &&
+                                 (LLVMGetOperand(i, 1) == LLVMGetOperand(j, 1)) &&
+                                 (LLVMTypeOf(LLVMGetOperand(j, 0)) == LLVMTypeOf(LLVMGetOperand(i, 0))))
                         {
-                            LLVMValueRef rm = inst_iter;
-                            inst_iter = LLVMGetNextInstruction(inst_iter);
+                            LLVMValueRef rm = i;
+                            i = LLVMGetNextInstruction(i);
                             LLVMInstructionEraseFromParent(rm);
                             CSEStElim++;
 
                             move_to_next_store = 1;
                             break;
                         }
-                        else if (LLVMGetInstructionOpcode(inst_iter2) == LLVMStore ||
-                                 LLVMGetInstructionOpcode(inst_iter2) == LLVMCall ||
-                                 LLVMGetInstructionOpcode(inst_iter2) == LLVMLoad)
+                        if (LLVMGetInstructionOpcode(j) == LLVMStore ||
+                                 LLVMGetInstructionOpcode(j) == LLVMCall ||
+                                 LLVMGetInstructionOpcode(j) == LLVMLoad)
                         {
                             break;
                         }
 
-                        inst_iter2 = LLVMGetNextInstruction(inst_iter2);
+                        j = LLVMGetNextInstruction(j);
                     }
 
                     if (move_to_next_store == 1)
@@ -694,7 +694,7 @@ static void redundantStore(Module *M)
                     }
                 }
 
-                inst_iter = LLVMGetNextInstruction(inst_iter);
+                i = LLVMGetNextInstruction(i);
             }
         }
     }
