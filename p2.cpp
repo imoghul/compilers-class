@@ -448,7 +448,6 @@ static llvm::Statistic CSELdElim = {"", "CSELdElim", "CSE redundant loads"};
 static llvm::Statistic CSEStore2Load = {"", "CSEStore2Load", "CSE forwarded store to load"};
 static llvm::Statistic CSEStElim = {"", "CSEStElim", "CSE redundant stores"};
 
-
 static int cseSupports(LLVMValueRef I)
 {
     return !(LLVMIsALoadInst(I) ||
@@ -465,15 +464,15 @@ static int cseSupports(LLVMValueRef I)
 static bool areCSE(LLVMValueRef I, LLVMValueRef J)
 {
 
-    int ret = false;    
-    
+    int ret = false;
+
     if (LLVMGetInstructionOpcode(I) == LLVMGetInstructionOpcode(J) && LLVMTypeOf(I) == LLVMTypeOf(J) && LLVMGetNumOperands(I) == LLVMGetNumOperands(J))
     {
         for (int i = 0; i < LLVMGetNumOperands(I); ++i)
         {
             ret = (LLVMGetOperand(I, i) == LLVMGetOperand(J, i));
-                
-            if(!ret)
+
+            if (!ret)
             {
                 return false;
             }
@@ -485,15 +484,16 @@ static bool areCSE(LLVMValueRef I, LLVMValueRef J)
 static void doCSE(LLVMBasicBlockRef BB, LLVMValueRef I)
 {
 
-    if (!cseSupports(I))return;
-    
+    if (LLVMIsALoadInst(I) || LLVMIsAStoreInst(I) || LLVMIsACallInst(I) || LLVMIsAPHINode(I) || LLVMIsAExtractValueInst(I) || LLVMIsAFCmpInst(I) || LLVMIsAAllocaInst(I) || LLVMIsAVAArgInst(I) || LLVMIsATerminatorInst(I))
+        return;
+
     LLVMValueRef inst = LLVMGetFirstInstruction(BB);
     while (inst != NULL)
     {
         LLVMValueRef temp = inst;
         inst = LLVMGetNextInstruction(inst);
         if (areCSE(I, temp))
-        {   
+        {
             LLVMReplaceAllUsesWith(temp, I);
             LLVMInstructionEraseFromParent(temp);
             CSEElim++;
@@ -505,7 +505,7 @@ static void doCSE(LLVMBasicBlockRef BB, LLVMValueRef I)
     for (domBB = LLVMFirstDomChild(BB); domBB != NULL; domBB = LLVMNextDomChild(BB, domBB))
     {
         doCSE(domBB, I);
-    } 
+    }
 }
 
 static void simplify(Module *M)
@@ -561,8 +561,10 @@ static void cse(Module *M)
 
             for (auto i = BB->begin(); i != BB->end(); i++)
             {
-                if (!cseSupports(wrap(&(*i)))) continue;
-                
+                //if (!cseSupports(wrap(&(*i))))
+                if (LLVMIsALoadInst(wrap(&(*i))) || LLVMIsAStoreInst(wrap(&(*i))) || LLVMIsACallInst(wrap(&(*i))) || LLVMIsAPHINode(wrap(&(*i))) || LLVMIsAExtractValueInst(wrap(&(*i))) || LLVMIsAFCmpInst(wrap(&(*i))) || LLVMIsAAllocaInst(wrap(&(*i))) || LLVMIsAVAArgInst(wrap(&(*i))) || LLVMIsATerminatorInst(wrap(&(*i))))
+                    continue;
+
                 LLVMValueRef inst = LLVMGetNextInstruction(wrap(&(*i)));
                 while (inst != NULL)
                 {
@@ -570,7 +572,7 @@ static void cse(Module *M)
                     inst = LLVMGetNextInstruction(inst);
                     if (areCSE(wrap(&(*i)), temp))
                     {
-                        
+
                         LLVMReplaceAllUsesWith(temp, wrap(&(*i)));
                         LLVMInstructionEraseFromParent(temp);
                         CSEElim++;
@@ -658,9 +660,9 @@ static void redundantStore(Module *M)
                         }
 
                         if ((LLVMGetInstructionOpcode(temp_j) == LLVMStore) &&
-                                 (!(LLVMGetVolatile(i))) &&
-                                 (LLVMGetOperand(i, 1) == LLVMGetOperand(temp_j, 1)) &&
-                                 (LLVMTypeOf(LLVMGetOperand(temp_j, 0)) == LLVMTypeOf(LLVMGetOperand(i, 0))))
+                            (!(LLVMGetVolatile(i))) &&
+                            (LLVMGetOperand(i, 1) == LLVMGetOperand(temp_j, 1)) &&
+                            (LLVMTypeOf(LLVMGetOperand(temp_j, 0)) == LLVMTypeOf(LLVMGetOperand(i, 0))))
                         {
                             LLVMValueRef temp = i;
                             i = LLVMGetNextInstruction(i);
@@ -669,12 +671,10 @@ static void redundantStore(Module *M)
                             break;
                         }
                         if (LLVMGetInstructionOpcode(temp_j) == LLVMStore ||
-                                 LLVMGetInstructionOpcode(temp_j) == LLVMCall ||
-                                 LLVMGetInstructionOpcode(temp_j) == LLVMLoad)
+                            LLVMGetInstructionOpcode(temp_j) == LLVMCall ||
+                            LLVMGetInstructionOpcode(temp_j) == LLVMLoad)
                             break;
-                        
                     }
-
                 }
 
                 i = LLVMGetNextInstruction(i);
