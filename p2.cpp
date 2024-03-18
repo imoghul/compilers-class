@@ -684,15 +684,32 @@ static void cse(Module *M)
 {
     for (auto F = M->begin(); F != M->end(); F++)
     {
-        LLVMValueRef Function = wrap(&(*F));
-        LLVMBasicBlockRef BB; // points to each basic block one at a time
-        for (BB = LLVMGetFirstBasicBlock(Function); BB != NULL; BB = LLVMGetNextBasicBlock(BB))
+        for (auto BB = F->begin(); BB != F->end(); BB++)
         {
 
-            LLVMValueRef inst_iter;
-            for (inst_iter = LLVMGetFirstInstruction(BB); inst_iter != NULL; inst_iter = LLVMGetNextInstruction(inst_iter))
+            for (auto i = BB->begin(); i != BB->end(); i++)
             {
-                processInst(BB, inst_iter, 0);
+                LLVMValueRef inst_iter = LLVMGetNextInstruction(wrap(&(*i))); 
+                while (inst_iter != NULL)
+                {
+                    if (commonSubexpression(wrap(&(*i)), inst_iter))
+                    {
+                        LLVMValueRef rm = inst_iter;
+                        inst_iter = LLVMGetNextInstruction(inst_iter);
+                        LLVMReplaceAllUsesWith(rm, I);
+                        LLVMInstructionEraseFromParent(rm);
+                        CSEElim++;
+                        continue;
+                    }
+                    inst_iter = LLVMGetNextInstruction(inst_iter);
+                }
+
+                LLVMBasicBlockRef child_BB;
+                for (child_BB = LLVMFirstDomChild(wrap(&(*BB))); child_BB != NULL; child_BB = LLVMNextDomChild(wrap(&(*BB)), child_BB))
+                {
+                    processInst(child_BB, wrap(&(*i)), 1);
+                }
+                // processInst(BB, inst_iter, 0);
             }
         }
     }
