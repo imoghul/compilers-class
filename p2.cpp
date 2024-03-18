@@ -449,7 +449,7 @@ static llvm::Statistic CSEStore2Load = {"", "CSEStore2Load", "CSE forwarded stor
 static llvm::Statistic CSEStElim = {"", "CSEStElim", "CSE redundant stores"};
 
 
-static int canHandle(LLVMValueRef I)
+static int cseSupports(LLVMValueRef I)
 {
     return !(LLVMIsALoadInst(I) ||
              LLVMIsAStoreInst(I) ||
@@ -462,45 +462,40 @@ static int canHandle(LLVMValueRef I)
              LLVMIsATerminatorInst(I));
 }
 
-static bool commonSubexpression(LLVMValueRef I, LLVMValueRef J)
+static bool areCSE(LLVMValueRef I, LLVMValueRef J)
 {
 
     int ret = false;
 
-    if ((LLVMIsAICmpInst(I) && LLVMGetICmpPredicate(I) != LLVMGetICmpPredicate(J)) ||  (LLVMIsAFCmpInst(I) && LLVMGetFCmpPredicate(I) != LLVMGetFCmpPredicate(J)))
-    {
-            ret = false;
+    // if ((LLVMIsAICmpInst(I) && LLVMGetICmpPredicate(I) != LLVMGetICmpPredicate(J)) ||  (LLVMIsAFCmpInst(I) && LLVMGetFCmpPredicate(I) != LLVMGetFCmpPredicate(J))) ret = false;
         
-    }
+    
     if (LLVMGetInstructionOpcode(I) == LLVMGetInstructionOpcode(J) && LLVMTypeOf(I) == LLVMTypeOf(J) && LLVMGetNumOperands(I) == LLVMGetNumOperands(J))
     {
-                int oper_iter;
-                for (oper_iter = 0; oper_iter < LLVMGetNumOperands(I); oper_iter++)
-                {
-                    ret = (LLVMGetOperand(I, oper_iter) == LLVMGetOperand(J, oper_iter));
-                        
-                    if(!ret)
-                    {
-                        return false;
-                    }
-                }
+        for (int i = 0; i < LLVMGetNumOperands(I); ++i)
+        {
+            ret = (LLVMGetOperand(I, i) == LLVMGetOperand(J, i));
+                
+            if(!ret)
+            {
+                return false;
+            }
+        }
     }
     return ret;
 }
 
-static void processInst(LLVMBasicBlockRef BB, LLVMValueRef I)
+static void doCSE(LLVMBasicBlockRef BB, LLVMValueRef I)
 {
 
-    if (!canHandle(I))
-    {
-        return;
-    }
+    if (!cseSupports(I))return;
+    
     LLVMValueRef inst = LLVMGetFirstInstruction(BB);
     while (inst != NULL)
     {
         LLVMValueRef temp = inst;
         inst = LLVMGetNextInstruction(inst);
-        if (commonSubexpression(I, temp))
+        if (areCSE(I, temp))
         {   
             LLVMReplaceAllUsesWith(temp, I);
             LLVMInstructionEraseFromParent(temp);
@@ -512,7 +507,7 @@ static void processInst(LLVMBasicBlockRef BB, LLVMValueRef I)
     LLVMBasicBlockRef domBB;
     for (domBB = LLVMFirstDomChild(BB); domBB != NULL; domBB = LLVMNextDomChild(BB, domBB))
     {
-        processInst(domBB, I);
+        doCSE(domBB, I);
     } 
 }
 
@@ -569,14 +564,14 @@ static void cse(Module *M)
 
             for (auto i = BB->begin(); i != BB->end(); i++)
             {
-                if (!canHandle(wrap(&(*i)))) continue;
+                if (!cseSupports(wrap(&(*i)))) continue;
                 
                 LLVMValueRef inst = LLVMGetNextInstruction(wrap(&(*i)));
                 while (inst != NULL)
                 {
                     LLVMValueRef temp = inst;
                     inst = LLVMGetNextInstruction(inst);
-                    if (commonSubexpression(wrap(&(*i)), temp))
+                    if (areCSE(wrap(&(*i)), temp))
                     {
                         
                         LLVMReplaceAllUsesWith(temp, wrap(&(*i)));
@@ -589,7 +584,7 @@ static void cse(Module *M)
                 LLVMBasicBlockRef domBB;
                 for (domBB = LLVMFirstDomChild(wrap(&(*BB))); domBB != NULL; domBB = LLVMNextDomChild(wrap(&(*BB)), domBB))
                 {
-                    processInst(domBB, wrap(&(*i)));
+                    doCSE(domBB, wrap(&(*i)));
                 }
             }
         }
@@ -634,7 +629,6 @@ static void redundantLoad(Module *M)
 
 static void redundantStore(Module *M)
 {
-    // static int move_to_next_store = 0;
     for (auto F = M->begin(); F != M->end(); F++)
     {
         LLVMValueRef Function = wrap(&(*F));
@@ -671,29 +665,19 @@ static void redundantStore(Module *M)
                                  (LLVMGetOperand(i, 1) == LLVMGetOperand(temp_j, 1)) &&
                                  (LLVMTypeOf(LLVMGetOperand(temp_j, 0)) == LLVMTypeOf(LLVMGetOperand(i, 0))))
                         {
-                            LLVMValueRef rm = i;
+                            LLVMValueRef temp = i;
                             i = LLVMGetNextInstruction(i);
-                            LLVMInstructionEraseFromParent(rm);
+                            LLVMInstructionEraseFromParent(temp);
                             CSEStElim++;
-
-                            // move_to_next_store = 1;
                             break;
                         }
                         if (LLVMGetInstructionOpcode(temp_j) == LLVMStore ||
                                  LLVMGetInstructionOpcode(temp_j) == LLVMCall ||
                                  LLVMGetInstructionOpcode(temp_j) == LLVMLoad)
-                        {
                             break;
-                        }
-
-                        // j = LLVMGetNextInstruction(j);
+                        
                     }
 
-                    // if (move_to_next_store == 1)
-                    // {
-                    //     move_to_next_store = 0;
-                    //     continue;
-                    // }
                 }
 
                 i = LLVMGetNextInstruction(i);
