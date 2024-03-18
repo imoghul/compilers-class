@@ -60,9 +60,9 @@
 #include "llvm/IR/Function.h"
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/GlobalVariable.h"
-//#include "llvm/PassManager.h"
+// #include "llvm/PassManager.h"
 #include "llvm/IR/Dominators.h"
-//#include "llvm/Analysis/PostDominators.h"
+// #include "llvm/Analysis/PostDominators.h"
 #include "llvm/Analysis/LoopInfo.h"
 #include "llvm/IR/Type.h"
 
@@ -89,142 +89,139 @@ extern "C"
     static void cse(Module *M);
     static void processInst(LLVMBasicBlockRef BB, LLVMValueRef I, int flag);
 }
-Function *Current=NULL;
-DominatorTreeBase<BasicBlock,false> *DT=NULL;
-DominatorTreeBase<BasicBlock,true> *PDT=NULL;
+Function *Current = NULL;
+DominatorTreeBase<BasicBlock, false> *DT = NULL;
+DominatorTreeBase<BasicBlock, true> *PDT = NULL;
 
-LoopInfoBase<BasicBlock,Loop> *LI=NULL;
+LoopInfoBase<BasicBlock, Loop> *LI = NULL;
 
 void UpdateDominators(Function *F)
 {
-  if (Current != F)
+    if (Current != F)
     {
-      Current = F;
+        Current = F;
 
-      if (DT==NULL)
-	{
-	  DT = new DominatorTreeBase<BasicBlock,false>();
-	  PDT = new DominatorTreeBase<BasicBlock,true>();
-	  if (LI==NULL)
-	    LI = new LoopInfoBase<BasicBlock,Loop>();
-	}
-      
-      DT->recalculate(*F);
-      PDT->recalculate(*F);
+        if (DT == NULL)
+        {
+            DT = new DominatorTreeBase<BasicBlock, false>();
+            PDT = new DominatorTreeBase<BasicBlock, true>();
+            if (LI == NULL)
+                LI = new LoopInfoBase<BasicBlock, Loop>();
+        }
 
-      LI->analyze(*DT);
+        DT->recalculate(*F);
+        PDT->recalculate(*F);
+
+        LI->analyze(*DT);
     }
 }
 
 // Test if a dom b
 LLVMBool LLVMDominates(LLVMValueRef Fun, LLVMBasicBlockRef a, LLVMBasicBlockRef b)
 {
-  UpdateDominators((Function*)unwrap(Fun));
-  return DT->dominates(unwrap(a),unwrap(b));
+    UpdateDominators((Function *)unwrap(Fun));
+    return DT->dominates(unwrap(a), unwrap(b));
 }
 
 // Test if a pdom b
 LLVMBool LLVMPostDominates(LLVMValueRef Fun, LLVMBasicBlockRef a, LLVMBasicBlockRef b)
 {
-  UpdateDominators((Function*)unwrap(Fun));
-  return PDT->dominates(unwrap(a),unwrap(b));
+    UpdateDominators((Function *)unwrap(Fun));
+    return PDT->dominates(unwrap(a), unwrap(b));
 }
 
-LLVMBool LLVMIsReachableFromEntry(LLVMValueRef Fun, LLVMBasicBlockRef bb) {
-  UpdateDominators((Function*)unwrap(Fun));
-  return DT->isReachableFromEntry(unwrap(bb));
+LLVMBool LLVMIsReachableFromEntry(LLVMValueRef Fun, LLVMBasicBlockRef bb)
+{
+    UpdateDominators((Function *)unwrap(Fun));
+    return DT->isReachableFromEntry(unwrap(bb));
 }
-
 
 LLVMBasicBlockRef LLVMImmDom(LLVMBasicBlockRef BB)
 {
-  UpdateDominators(unwrap(BB)->getParent());
+    UpdateDominators(unwrap(BB)->getParent());
 
-  if ( DT->getNode((BasicBlock*)unwrap(BB)) == NULL )
-    return NULL;
-  
-  if ( DT->getNode((BasicBlock*)unwrap(BB))->getIDom()==NULL )
-    return NULL;
+    if (DT->getNode((BasicBlock *)unwrap(BB)) == NULL)
+        return NULL;
 
-  return wrap(DT->getNode(unwrap(BB))->getIDom()->getBlock());
+    if (DT->getNode((BasicBlock *)unwrap(BB))->getIDom() == NULL)
+        return NULL;
+
+    return wrap(DT->getNode(unwrap(BB))->getIDom()->getBlock());
 }
 
 LLVMBasicBlockRef LLVMImmPostDom(LLVMBasicBlockRef BB)
 {
-  UpdateDominators(unwrap(BB)->getParent());
+    UpdateDominators(unwrap(BB)->getParent());
 
-  if (PDT->getNode(unwrap(BB))->getIDom()==NULL)
-    return NULL;
+    if (PDT->getNode(unwrap(BB))->getIDom() == NULL)
+        return NULL;
 
-  return wrap((BasicBlock*)PDT->getNode(unwrap(BB))->getIDom()->getBlock());
+    return wrap((BasicBlock *)PDT->getNode(unwrap(BB))->getIDom()->getBlock());
 }
 
 LLVMBasicBlockRef LLVMFirstDomChild(LLVMBasicBlockRef BB)
 {
-  UpdateDominators(unwrap(BB)->getParent());
-  DomTreeNodeBase<BasicBlock> *Node = DT->getNode(unwrap(BB));
+    UpdateDominators(unwrap(BB)->getParent());
+    DomTreeNodeBase<BasicBlock> *Node = DT->getNode(unwrap(BB));
 
-  if(Node==NULL)
+    if (Node == NULL)
+        return NULL;
+
+    DomTreeNodeBase<BasicBlock>::iterator it = Node->begin();
+    if (it != Node->end())
+        return wrap((*it)->getBlock());
     return NULL;
-
-  DomTreeNodeBase<BasicBlock>::iterator it = Node->begin();
-  if (it!=Node->end())
-    return wrap((*it)->getBlock());
-  return NULL;
 }
 
 LLVMBasicBlockRef LLVMNextDomChild(LLVMBasicBlockRef BB, LLVMBasicBlockRef Child)
 {
-  UpdateDominators(unwrap(BB)->getParent());
-  DomTreeNodeBase<BasicBlock> *Node = DT->getNode(unwrap(BB));
-  DomTreeNodeBase<BasicBlock>::iterator it,end;
+    UpdateDominators(unwrap(BB)->getParent());
+    DomTreeNodeBase<BasicBlock> *Node = DT->getNode(unwrap(BB));
+    DomTreeNodeBase<BasicBlock>::iterator it, end;
 
-  bool next=false;
-  for(it=Node->begin(),end=Node->end(); it!=end; it++)
-    if (next)
-      return wrap((*it)->getBlock());
-    else if (*it==DT->getNode(unwrap(Child)))
-      next=true;
+    bool next = false;
+    for (it = Node->begin(), end = Node->end(); it != end; it++)
+        if (next)
+            return wrap((*it)->getBlock());
+        else if (*it == DT->getNode(unwrap(Child)))
+            next = true;
 
-  return NULL;
+    return NULL;
 }
-
 
 LLVMBasicBlockRef LLVMNearestCommonDominator(LLVMBasicBlockRef A, LLVMBasicBlockRef B)
 {
-  UpdateDominators(unwrap(A)->getParent());
-  return wrap(DT->findNearestCommonDominator(unwrap(A),unwrap(B)));
+    UpdateDominators(unwrap(A)->getParent());
+    return wrap(DT->findNearestCommonDominator(unwrap(A), unwrap(B)));
 }
 
 unsigned LLVMGetLoopNestingDepth(LLVMBasicBlockRef BB)
 {
-  if (LI==NULL)
-    UpdateDominators(unwrap(BB)->getParent());
+    if (LI == NULL)
+        UpdateDominators(unwrap(BB)->getParent());
 
-  return LI->getLoopDepth(unwrap(BB));
+    return LI->getLoopDepth(unwrap(BB));
 }
-
 
 LLVMBasicBlockRef LLVMDominanceFrontierLocal(LLVMBasicBlockRef BB)
 {
-  return NULL;
+    return NULL;
 }
 
 LLVMBasicBlockRef LLVMDominanceFrontierClosure(LLVMBasicBlockRef BB)
 {
-  return NULL;
+    return NULL;
 }
 
 LLVMBasicBlockRef LLVMPostDominanceFrontierLocal(LLVMBasicBlockRef BB)
 {
-  return NULL;
+    return NULL;
 }
 
 LLVMBasicBlockRef LLVMPostDominanceFrontierClosure(LLVMBasicBlockRef BB)
 {
-  return NULL;
+    return NULL;
 }
-
 
 bool isDead(Instruction &I)
 {
@@ -719,58 +716,58 @@ static void cse(Module *M)
 {
     for (auto F = M->begin(); F != M->end(); F++)
     {
-        // for (auto BB = F->begin(); BB != F->end(); BB++)
-        // {
-
-        //     for (auto i = BB->begin(); i != BB->end(); i++)
-        //     {
-        //         for (auto j = i; j != BB->end();)
-        //         {
-        //             if (&(*i) == &(*j))
-        //             {
-        //                 ++j;
-        //                 continue;
-        //             }
-
-        //             auto &inst = *j;
-        //             j++;
-        //             if (isCSE(*i, inst))
-        //             {
-        //                 // replace uses and stuff
-        //                 inst.replaceAllUsesWith((Value *)(&(*i)));
-        //                 inst.eraseFromParent();
-        //                 CSEElim++;
-        //             }
-        //             // break;
-        //         }
-
-        //         // iterate over each child of BB
-        //         auto DT = new DominatorTreeBase<BasicBlock, false>(); // make a new one
-        //         DT->recalculate(*F);                                  // calculate for a new function F
-
-        //         DomTreeNodeBase<BasicBlock> *Node = DT->getNode(&*BB); // get node for BB
-        //         for (DomTreeNodeBase<BasicBlock> **child = Node->begin(); child != Node->end(); child++)
-        //         {
-        //             doCSE(&(*F), (*child)->getBlock(), &(*i));
-        //         }
-
-        //         delete DT;
-        //         // break;
-        //     }
-        //     // break;
-        // }
-        // // break;
-        LLVMValueRef Function = wrap(&(*F));
-        LLVMBasicBlockRef BB; // points to each basic block one at a time
-        for (BB = LLVMGetFirstBasicBlock(Function); BB != NULL; BB = LLVMGetNextBasicBlock(BB))
+        for (auto BB = F->begin(); BB != F->end(); BB++)
         {
 
-            LLVMValueRef inst_iter; // points to each instruction
-            for (inst_iter = LLVMGetFirstInstruction(BB); inst_iter != NULL; inst_iter = LLVMGetNextInstruction(inst_iter))
+            for (auto i = BB->begin(); i != BB->end(); i++)
             {
-                processInst(BB, inst_iter, 0);
+                for (auto j = i; j != BB->end();)
+                {
+                    if (&(*i) == &(*j))
+                    {
+                        ++j;
+                        continue;
+                    }
+
+                    auto &inst = *j;
+                    j++;
+                    if (isCSE(*i, inst))
+                    {
+                        // replace uses and stuff
+                        inst.replaceAllUsesWith((Value *)(&(*i)));
+                        inst.eraseFromParent();
+                        CSEElim++;
+                    }
+                    // break;
+                }
+
+                // iterate over each child of BB
+                auto DT = new DominatorTreeBase<BasicBlock, false>(); // make a new one
+                DT->recalculate(*F);                                  // calculate for a new function F
+
+                DomTreeNodeBase<BasicBlock> *Node = DT->getNode(&*BB); // get node for BB
+                for (DomTreeNodeBase<BasicBlock> **child = Node->begin(); child != Node->end(); child++)
+                {
+                    doCSE(&(*F), (*child)->getBlock(), &(*i));
+                }
+
+                delete DT;
+                // break;
             }
+            // break;
         }
+        // break;
+        // LLVMValueRef Function = wrap(&(*F));
+        // LLVMBasicBlockRef BB; // points to each basic block one at a time
+        // for (BB = LLVMGetFirstBasicBlock(Function); BB != NULL; BB = LLVMGetNextBasicBlock(BB))
+        // {
+
+        //     LLVMValueRef inst_iter;
+        //     for (inst_iter = LLVMGetFirstInstruction(BB); inst_iter != NULL; inst_iter = LLVMGetNextInstruction(inst_iter))
+        //     {
+        //         processInst(BB, inst_iter, 0);
+        //     }
+        // }
     }
 }
 
@@ -816,23 +813,19 @@ static void redundantStore(Module *M)
     for (auto F = M->begin(); F != M->end(); F++)
     {
         LLVMValueRef Function = wrap(&(*F));
-        // printf("\ninside functio");
-        LLVMBasicBlockRef BB; // points to each basic block one at a time
+        LLVMBasicBlockRef BB;
         for (BB = LLVMGetFirstBasicBlock(Function); BB != NULL; BB = LLVMGetNextBasicBlock(BB))
         {
-            // printf("\ninside BB");
-            LLVMValueRef inst_iter; // points to each instruction
+            LLVMValueRef inst_iter;
             inst_iter = LLVMGetFirstInstruction(BB);
             while (inst_iter != NULL)
             {
-                // LLVMDumpValue(inst_iter);
                 if (LLVMGetInstructionOpcode(inst_iter) == LLVMStore)
                 {
-                    LLVMValueRef inst_iter2; // points to each instruction
+                    LLVMValueRef inst_iter2;
                     inst_iter2 = LLVMGetNextInstruction(inst_iter);
                     while (inst_iter2 != NULL)
                     {
-                        // store to load forwarding
                         if ((LLVMGetInstructionOpcode(inst_iter2) == LLVMLoad) &&
                             (!(LLVMGetVolatile(inst_iter2))) &&
                             (LLVMTypeOf(inst_iter2) == LLVMTypeOf(LLVMGetOperand(inst_iter, 0))) &&
@@ -843,7 +836,7 @@ static void redundantStore(Module *M)
                             LLVMReplaceAllUsesWith(rm, LLVMGetOperand(inst_iter, 0));
                             LLVMInstructionEraseFromParent(rm);
                             CSEStore2Load++;
-                            continue; // inst_iter2 has already been incremented. Continue checking next instruction
+                            continue; 
                         }
 
                         else if ((LLVMGetInstructionOpcode(inst_iter2) == LLVMStore) &&
@@ -855,7 +848,7 @@ static void redundantStore(Module *M)
                             inst_iter = LLVMGetNextInstruction(inst_iter);
                             LLVMInstructionEraseFromParent(rm);
                             CSEStElim++;
-                            // printf("\nincemrent inside elseif  redundant sotore ");
+                            
                             move_to_next_store = 1;
                             break;
                         }
@@ -876,7 +869,6 @@ static void redundantStore(Module *M)
                     }
                 }
 
-                // printf("Hi");
                 inst_iter = LLVMGetNextInstruction(inst_iter);
             }
         }
