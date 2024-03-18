@@ -513,7 +513,7 @@ static void processInst(LLVMBasicBlockRef BB, LLVMValueRef I)
     for (domBB = LLVMFirstDomChild(BB); domBB != NULL; domBB = LLVMNextDomChild(BB, domBB))
     {
         processInst(domBB, I);
-    }
+    } 
 }
 
 static void simplify(Module *M)
