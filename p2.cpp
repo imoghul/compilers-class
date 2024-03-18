@@ -649,11 +649,12 @@ static void redundantStore(Module *M)
                 {
                     LLVMValueRef j;
                     j = LLVMGetNextInstruction(i);
-                    LLVMValueRef temp_j = j;
-
-                    j = LLVMGetNextInstruction(j);
                     while (temp_j != NULL)
                     {
+
+                        LLVMValueRef temp_j = j;
+                        j = LLVMGetNextInstruction(j);
+
                         if ((LLVMGetInstructionOpcode(temp_j) == LLVMLoad) &&
                             (!(LLVMGetVolatile(temp_j))) &&
                             (LLVMGetOperand(i, 1) == LLVMGetOperand(temp_j, 0)) &&
