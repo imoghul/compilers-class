@@ -663,16 +663,17 @@ static void cse(Module *M)
                 LLVMValueRef inst = LLVMGetNextInstruction(wrap(&(*i)));
                 while (inst != NULL)
                 {
-                    if (commonSubexpression(wrap(&(*i)), inst))
+                    LLVMValueRef temp = inst;
+                    inst = LLVMGetNextInstruction(inst);
+                    if (commonSubexpression(wrap(&(*i)), temp))
                     {
-                        LLVMValueRef rm = inst;
-                        inst = LLVMGetNextInstruction(inst);
-                        LLVMReplaceAllUsesWith(rm, wrap(&(*i)));
-                        LLVMInstructionEraseFromParent(rm);
+                        
+                        LLVMReplaceAllUsesWith(temp, wrap(&(*i)));
+                        LLVMInstructionEraseFromParent(temp);
                         CSEElim++;
                         continue;
                     }
-                    inst = LLVMGetNextInstruction(inst);
+                    // inst = LLVMGetNextInstruction(inst);
                 }
 
                 LLVMBasicBlockRef child_BB;
@@ -680,7 +681,6 @@ static void cse(Module *M)
                 {
                     processInst(child_BB, wrap(&(*i)));
                 }
-                // processInst(BB, inst_iter, 0);
             }
         }
     }
