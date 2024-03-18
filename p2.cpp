@@ -66,78 +66,6 @@ extern "C"
     static void processInst(LLVMBasicBlockRef BB, LLVMValueRef I, int flag);
 }
 
-static void processInst(LLVMBasicBlockRef BB, LLVMValueRef I, int flag)
-{
-
-    if (!canHandle(I))
-    {
-        // printf("\n I cant handle");
-        return;
-    }
-    else // can handle
-    {
-        if (flag == 0)
-        {
-            LLVMValueRef inst_iter = LLVMGetNextInstruction(I); // points to each instruction
-            while (inst_iter != NULL)
-            {
-                // printf("\nBefore CSE");
-                // printf("\ncommonSubexpression(I, inst_iter) : %d",x );
-                if (commonSubexpression(I, inst_iter))
-                {
-                    // printf("\nCSE inside the same block ");
-                    LLVMValueRef rm = inst_iter;
-                    // update iterator first, before erasing
-                    inst_iter = LLVMGetNextInstruction(inst_iter);
-                    LLVMReplaceAllUsesWith(rm, I);
-                    LLVMInstructionEraseFromParent(rm);
-                    total_deleted_instructions++;
-                    CSE_basic++;
-                    continue;
-                }
-                // printf("\nsa");
-                inst_iter = LLVMGetNextInstruction(inst_iter);
-                // printf("\nks");
-            }
-
-            // for each dom-tree child of BB:
-            // processInst(child)
-            LLVMBasicBlockRef child_BB;
-            for (child_BB = LLVMFirstDomChild(BB); child_BB != NULL; child_BB = LLVMNextDomChild(BB, child_BB))
-            {
-                processInst(child_BB, I, 1);
-            }
-        }
-
-        else if (flag == 1)
-
-        {
-            LLVMValueRef insn_child = LLVMGetFirstInstruction(BB);
-            while (insn_child != NULL)
-            {
-                if (commonSubexpression(I, insn_child))
-                {
-                    LLVMValueRef rm = insn_child;
-                    // update iterator first, before erasing
-                    insn_child = LLVMGetNextInstruction(insn_child);
-                    LLVMReplaceAllUsesWith(rm, I);
-                    LLVMInstructionEraseFromParent(rm);
-                    total_deleted_instructions++;
-                    CSE_basic++;
-                    continue;
-                }
-                insn_child = LLVMGetNextInstruction(insn_child);
-            }
-
-            LLVMBasicBlockRef child_BB;
-            for (child_BB = LLVMFirstDomChild(BB); child_BB != NULL; child_BB = LLVMNextDomChild(BB, child_BB))
-            {
-                processInst(child_BB, I, 1);
-            }
-        }
-    }
-}
-
 bool isDead(Instruction &I)
 {
 
@@ -450,6 +378,138 @@ static void doCSE(Function *F, BasicBlock *BB, Instruction *I)
     for (DomTreeNodeBase<BasicBlock> **child = Node->begin(); child != Node->end(); child++)
     {
         doCSE(F, (*child)->getBlock(), I);
+    }
+}
+
+static int canHandle(LLVMValueRef I)
+{
+    return !(LLVMIsALoadInst(I) ||
+             LLVMIsAStoreInst(I) ||
+             LLVMIsATerminatorInst(I) ||
+             LLVMIsACallInst(I) ||
+             LLVMIsAPHINode(I) ||
+             LLVMIsAAllocaInst(I) ||
+             LLVMIsAFCmpInst(I) ||
+             LLVMIsAVAArgInst(I) ||
+             LLVMIsAExtractValueInst(I));
+}
+
+static int commonSubexpression(LLVMValueRef I, LLVMValueRef J)
+{
+
+    int flag = 0;
+    // printf("\n Entering CSE function");
+
+    if (LLVMIsAICmpInst(I))
+    {
+        if (LLVMGetICmpPredicate(I) != LLVMGetICmpPredicate(J))
+        {
+            flag = 0;
+        }
+    }
+
+    if (LLVMIsAFCmpInst(I))
+    {
+        if (LLVMGetFCmpPredicate(I) != LLVMGetFCmpPredicate(J))
+        {
+            flag = 0;
+        }
+    }
+    if (LLVMGetInstructionOpcode(I) == LLVMGetInstructionOpcode(J)) // same opcode
+    {
+        if (LLVMTypeOf(I) == LLVMTypeOf(J)) // same type of instruction
+        {
+            if (LLVMGetNumOperands(I) == LLVMGetNumOperands(J)) // same number of operands
+            {
+                int oper_iter;
+                for (oper_iter = 0; oper_iter < LLVMGetNumOperands(I); oper_iter++)
+                {
+                    LLVMValueRef op_I = LLVMGetOperand(I, oper_iter);
+                    LLVMValueRef op_J = LLVMGetOperand(J, oper_iter);
+                    if (op_I == op_J) // all operands are the same (pointer equivalence) LLVMValueRef (in )
+                        flag = 1;
+                    else
+                    {
+                        flag = 0;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    // printf("\nExiting CSE function");
+    return flag;
+}
+
+static void processInst(LLVMBasicBlockRef BB, LLVMValueRef I, int flag)
+{
+
+    if (!canHandle(I))
+    {
+        // printf("\n I cant handle");
+        return;
+    }
+    else // can handle
+    {
+        if (flag == 0)
+        {
+            LLVMValueRef inst_iter = LLVMGetNextInstruction(I); // points to each instruction
+            while (inst_iter != NULL)
+            {
+                // printf("\nBefore CSE");
+                // printf("\ncommonSubexpression(I, inst_iter) : %d",x );
+                if (commonSubexpression(I, inst_iter))
+                {
+                    // printf("\nCSE inside the same block ");
+                    LLVMValueRef rm = inst_iter;
+                    // update iterator first, before erasing
+                    inst_iter = LLVMGetNextInstruction(inst_iter);
+                    LLVMReplaceAllUsesWith(rm, I);
+                    LLVMInstructionEraseFromParent(rm);
+                    total_deleted_instructions++;
+                    CSE_basic++;
+                    continue;
+                }
+                // printf("\nsa");
+                inst_iter = LLVMGetNextInstruction(inst_iter);
+                // printf("\nks");
+            }
+
+            // for each dom-tree child of BB:
+            // processInst(child)
+            LLVMBasicBlockRef child_BB;
+            for (child_BB = LLVMFirstDomChild(BB); child_BB != NULL; child_BB = LLVMNextDomChild(BB, child_BB))
+            {
+                processInst(child_BB, I, 1);
+            }
+        }
+
+        else if (flag == 1)
+
+        {
+            LLVMValueRef insn_child = LLVMGetFirstInstruction(BB);
+            while (insn_child != NULL)
+            {
+                if (commonSubexpression(I, insn_child))
+                {
+                    LLVMValueRef rm = insn_child;
+                    // update iterator first, before erasing
+                    insn_child = LLVMGetNextInstruction(insn_child);
+                    LLVMReplaceAllUsesWith(rm, I);
+                    LLVMInstructionEraseFromParent(rm);
+                    total_deleted_instructions++;
+                    CSE_basic++;
+                    continue;
+                }
+                insn_child = LLVMGetNextInstruction(insn_child);
+            }
+
+            LLVMBasicBlockRef child_BB;
+            for (child_BB = LLVMFirstDomChild(BB); child_BB != NULL; child_BB = LLVMNextDomChild(BB, child_BB))
+            {
+                processInst(child_BB, I, 1);
+            }
+        }
     }
 }
 
