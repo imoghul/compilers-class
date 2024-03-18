@@ -51,8 +51,8 @@
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/Support/DataTypes.h"
 #include "llvm-c/Core.h"
-// #include "dominance.h"
-// #include "transform.h"
+#include "dominance.h"
+#include "transform.h"
 
 using namespace llvm;
 
