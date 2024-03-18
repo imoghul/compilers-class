@@ -466,8 +466,7 @@ static void processInst(LLVMBasicBlockRef BB, LLVMValueRef I, int flag)
                     inst_iter = LLVMGetNextInstruction(inst_iter);
                     LLVMReplaceAllUsesWith(rm, I);
                     LLVMInstructionEraseFromParent(rm);
-                    total_deleted_instructions++;
-                    CSE_basic++;
+                    CSEElim++;
                     continue;
                 }
                 // printf("\nsa");
@@ -497,8 +496,7 @@ static void processInst(LLVMBasicBlockRef BB, LLVMValueRef I, int flag)
                     insn_child = LLVMGetNextInstruction(insn_child);
                     LLVMReplaceAllUsesWith(rm, I);
                     LLVMInstructionEraseFromParent(rm);
-                    total_deleted_instructions++;
-                    CSE_basic++;
+                    CSEElim++;
                     continue;
                 }
                 insn_child = LLVMGetNextInstruction(insn_child);
