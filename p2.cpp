@@ -700,7 +700,7 @@ static void cse(Module *M)
                     {
                         LLVMValueRef rm = inst_iter;
                         inst_iter = LLVMGetNextInstruction(inst_iter);
-                        LLVMReplaceAllUsesWith(rm, I);
+                        LLVMReplaceAllUsesWith(rm, wrap(&(*i)));
                         LLVMInstructionEraseFromParent(rm);
                         CSEElim++;
                         continue;
