@@ -448,132 +448,44 @@ static llvm::Statistic CSELdElim = {"", "CSELdElim", "CSE redundant loads"};
 static llvm::Statistic CSEStore2Load = {"", "CSEStore2Load", "CSE forwarded store to load"};
 static llvm::Statistic CSEStElim = {"", "CSEStElim", "CSE redundant stores"};
 
-static bool isCSE(Instruction &i1, Instruction &i2)
-{
-    if (&i1 == &i2)
-        return false;
-
-    LLVMValueRef I1 = wrap(&i1);
-    LLVMValueRef I2 = wrap(&i2);
-
-    bool ret = false;
-    if ((LLVMIsAICmpInst(I1) && (LLVMGetICmpPredicate(I1) != LLVMGetICmpPredicate(I2))) || (LLVMIsAFCmpInst(I1) && LLVMGetFCmpPredicate(I1) != LLVMGetFCmpPredicate(I2)))
-    {
-        ret = false;
-    }
-    if (LLVMGetInstructionOpcode(I1) == LLVMGetInstructionOpcode(I2) && LLVMTypeOf(I1) == LLVMTypeOf(I2) && LLVMGetNumOperands(I1) == LLVMGetNumOperands(I2))
-    {
-
-        for (int i = 0; i < LLVMGetNumOperands(I1); i++)
-        {
-            LLVMValueRef a = LLVMGetOperand(I1, i);
-            LLVMValueRef b = LLVMGetOperand(I2, i);
-            ret = a == b;
-            if (!ret)
-                return false;
-        }
-    }
-    return ret;
-}
-
-static int cseSupports(Instruction *i)
-{
-    LLVMValueRef I = wrap(i);
-    return !(LLVMIsALoadInst(I) ||
-             LLVMIsAStoreInst(I) ||
-             LLVMIsAPHINode(I) ||
-             LLVMIsACallInst(I) ||
-             LLVMIsAAllocaInst(I) ||
-             LLVMIsAFCmpInst(I) ||
-             LLVMIsATerminatorInst(I) ||
-             LLVMIsAVAArgInst(I) ||
-             LLVMIsAExtractValueInst(I));
-}
-
-static void doCSE(Function *F, BasicBlock *BB, Instruction *I)
-{
-    if (!cseSupports((Instruction *)I))
-        return;
-
-    for (auto i = BB->begin(); i != BB->end();)
-    {
-        Instruction &inst = *i;
-        i++;
-        if (isCSE(*((Instruction *)I), (*i)))
-        {
-            inst.replaceAllUsesWith(I);
-            inst.eraseFromParent();
-            CSEElim++;
-        }
-    }
-
-    auto DT = new DominatorTreeBase<BasicBlock, false>();
-    DT->recalculate(*F);
-
-    DomTreeNodeBase<BasicBlock> *Node = DT->getNode(&*BB);
-
-    for (DomTreeNodeBase<BasicBlock> **child = Node->begin(); child != Node->end(); child++)
-    {
-        doCSE(F, (*child)->getBlock(), I);
-    }
-}
 
 static int canHandle(LLVMValueRef I)
 {
     return !(LLVMIsALoadInst(I) ||
              LLVMIsAStoreInst(I) ||
-             LLVMIsATerminatorInst(I) ||
              LLVMIsACallInst(I) ||
              LLVMIsAPHINode(I) ||
-             LLVMIsAAllocaInst(I) ||
+             LLVMIsAExtractValueInst(I) ||
              LLVMIsAFCmpInst(I) ||
+             LLVMIsAAllocaInst(I) ||
              LLVMIsAVAArgInst(I) ||
-             LLVMIsAExtractValueInst(I));
+             LLVMIsATerminatorInst(I));
 }
 
-static int commonSubexpression(LLVMValueRef I, LLVMValueRef J)
+static bool commonSubexpression(LLVMValueRef I, LLVMValueRef J)
 {
 
-    int flag = 0;
+    int ret = false;
 
-    if (LLVMIsAICmpInst(I))
+    if ((LLVMIsAICmpInst(I) && LLVMGetICmpPredicate(I) != LLVMGetICmpPredicate(J)) ||  (LLVMIsAFCmpInst(I) && LLVMGetFCmpPredicate(I) != LLVMGetFCmpPredicate(J)))
     {
-        if (LLVMGetICmpPredicate(I) != LLVMGetICmpPredicate(J))
-        {
-            flag = 0;
-        }
+            ret = false;
+        
     }
-
-    if (LLVMIsAFCmpInst(I))
+    if (LLVMGetInstructionOpcode(I) == LLVMGetInstructionOpcode(J) && LLVMTypeOf(I) == LLVMTypeOf(J) && LLVMGetNumOperands(I) == LLVMGetNumOperands(J))
     {
-        if (LLVMGetFCmpPredicate(I) != LLVMGetFCmpPredicate(J))
-        {
-            flag = 0;
-        }
-    }
-    if (LLVMGetInstructionOpcode(I) == LLVMGetInstructionOpcode(J))
-    {
-        if (LLVMTypeOf(I) == LLVMTypeOf(J))
-        {
-            if (LLVMGetNumOperands(I) == LLVMGetNumOperands(J))
-            {
                 int oper_iter;
                 for (oper_iter = 0; oper_iter < LLVMGetNumOperands(I); oper_iter++)
                 {
-                    LLVMValueRef op_I = LLVMGetOperand(I, oper_iter);
-                    LLVMValueRef op_J = LLVMGetOperand(J, oper_iter);
-                    if (op_I == op_J)
-                        flag = 1;
-                    else
+                    ret = (LLVMGetOperand(I, oper_iter) == LLVMGetOperand(J, oper_iter))
+                        
+                    if(!ret)
                     {
-                        flag = 0;
-                        break;
+                        return false;
                     }
                 }
-            }
-        }
     }
-    return flag;
+    return ret;
 }
 
 static void processInst(LLVMBasicBlockRef BB, LLVMValueRef I)
@@ -583,25 +495,24 @@ static void processInst(LLVMBasicBlockRef BB, LLVMValueRef I)
     {
         return;
     }
-    LLVMValueRef insn_child = LLVMGetFirstInstruction(BB);
-    while (insn_child != NULL)
+    LLVMValueRef inst = LLVMGetFirstInstruction(BB);
+    while (inst != NULL)
     {
-        if (commonSubexpression(I, insn_child))
-        {
-            LLVMValueRef rm = insn_child;
-            insn_child = LLVMGetNextInstruction(insn_child);
-            LLVMReplaceAllUsesWith(rm, I);
-            LLVMInstructionEraseFromParent(rm);
+        LLVMValueRef temp = inst;
+        inst = LLVMGetNextInstruction(inst);
+        if (commonSubexpression(I, temp))
+        {   
+            LLVMReplaceAllUsesWith(temp, I);
+            LLVMInstructionEraseFromParent(temp);
             CSEElim++;
             continue;
         }
-        insn_child = LLVMGetNextInstruction(insn_child);
     }
 
-    LLVMBasicBlockRef child_BB;
-    for (child_BB = LLVMFirstDomChild(BB); child_BB != NULL; child_BB = LLVMNextDomChild(BB, child_BB))
+    LLVMBasicBlockRef domBB;
+    for (domBB = LLVMFirstDomChild(BB); domBB != NULL; domBB = LLVMNextDomChild(BB, domBB))
     {
-        processInst(child_BB, I);
+        processInst(domBB, I);
     }
 }
 
@@ -673,13 +584,12 @@ static void cse(Module *M)
                         CSEElim++;
                         continue;
                     }
-                    // inst = LLVMGetNextInstruction(inst);
                 }
 
-                LLVMBasicBlockRef child_BB;
-                for (child_BB = LLVMFirstDomChild(wrap(&(*BB))); child_BB != NULL; child_BB = LLVMNextDomChild(wrap(&(*BB)), child_BB))
+                LLVMBasicBlockRef domBB;
+                for (domBB = LLVMFirstDomChild(wrap(&(*BB))); domBB != NULL; domBB = LLVMNextDomChild(wrap(&(*BB)), domBB))
                 {
-                    processInst(child_BB, wrap(&(*i)));
+                    processInst(domBB, wrap(&(*i)));
                 }
             }
         }
