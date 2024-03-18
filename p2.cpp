@@ -689,6 +689,10 @@ static void cse(Module *M)
 
             for (auto i = BB->begin(); i != BB->end(); i++)
             {
+                if (!canHandle(wrap(&(*i))))
+                {
+                    continue;;
+                }
                 LLVMValueRef inst_iter = LLVMGetNextInstruction(wrap(&(*i))); 
                 while (inst_iter != NULL)
                 {
