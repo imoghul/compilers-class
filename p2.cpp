@@ -892,5 +892,4 @@ static void CommonSubexpressionElimination(Module *M)
     cse(M);
     redundantLoad(M);
     redundantStore(M);
-    cse(M);
 }
