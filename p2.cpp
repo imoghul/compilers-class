@@ -465,7 +465,7 @@ static int canHandle(LLVMValueRef I)
 static bool commonSubexpression(LLVMValueRef I, LLVMValueRef J)
 {
 
-    int ret = false;
+    int ret = true;
 
     if ((LLVMIsAICmpInst(I) && LLVMGetICmpPredicate(I) != LLVMGetICmpPredicate(J)) ||  (LLVMIsAFCmpInst(I) && LLVMGetFCmpPredicate(I) != LLVMGetFCmpPredicate(J)))
     {
