@@ -465,10 +465,7 @@ static int cseSupports(LLVMValueRef I)
 static bool areCSE(LLVMValueRef I, LLVMValueRef J)
 {
 
-    int ret = false;
-
-    // if ((LLVMIsAICmpInst(I) && LLVMGetICmpPredicate(I) != LLVMGetICmpPredicate(J)) ||  (LLVMIsAFCmpInst(I) && LLVMGetFCmpPredicate(I) != LLVMGetFCmpPredicate(J))) ret = false;
-        
+    int ret = false;    
     
     if (LLVMGetInstructionOpcode(I) == LLVMGetInstructionOpcode(J) && LLVMTypeOf(I) == LLVMTypeOf(J) && LLVMGetNumOperands(I) == LLVMGetNumOperands(J))
     {
@@ -695,7 +692,7 @@ static void CommonSubexpressionElimination(Module *M)
     cse(M);
     redundantLoad(M);
     redundantStore(M);
-    cse(M);
-    simplify(M);
-    removeDead(M);
+    // cse(M);
+    // simplify(M);
+    // removeDead(M);
 }
