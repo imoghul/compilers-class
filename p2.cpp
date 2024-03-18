@@ -456,40 +456,22 @@ static bool isCSE(Instruction &i1, Instruction &i2)
     LLVMValueRef I1 = wrap(&i1);
     LLVMValueRef I2 = wrap(&i2);
 
-    bool ret = 0;
-    if (LLVMIsAICmpInst(I1) && (LLVMGetICmpPredicate(I1) != LLVMGetICmpPredicate(I2)))
+    bool ret = false;
+    if ((LLVMIsAICmpInst(I1) && (LLVMGetICmpPredicate(I1) != LLVMGetICmpPredicate(I2))) || (LLVMIsAFCmpInst(I1) && LLVMGetFCmpPredicate(I1) != LLVMGetFCmpPredicate(I2)))
     {
-        ret = 0;
+        ret = false;
     }
-
-    if (LLVMIsAFCmpInst(I1))
+    if (LLVMGetInstructionOpcode(I1) == LLVMGetInstructionOpcode(I2) && LLVMTypeOf(I1) == LLVMTypeOf(I2) &7 LLVMGetNumOperands(I1) == LLVMGetNumOperands(I2))
     {
-        if (LLVMGetFCmpPredicate(I1) != LLVMGetFCmpPredicate(I2))
+        
+        for (int i = 0; i < LLVMGetNumOperands(I1); i++)
         {
-            ret = 0;
+            LLVMValueRef a = LLVMGetOperand(I1, i);
+            LLVMValueRef b = LLVMGetOperand(I2, i);
+            ret = a == b;
+            if(!ret) return false;
         }
-    }
-    if (LLVMGetInstructionOpcode(I1) == LLVMGetInstructionOpcode(I2))
-    {
-        if (LLVMTypeOf(I1) == LLVMTypeOf(I2))
-        {
-            if (LLVMGetNumOperands(I1) == LLVMGetNumOperands(I2))
-            {
-                int oper_iter;
-                for (oper_iter = 0; oper_iter < LLVMGetNumOperands(I1); oper_iter++)
-                {
-                    LLVMValueRef op_I = LLVMGetOperand(I1, oper_iter);
-                    LLVMValueRef op_J = LLVMGetOperand(I2, oper_iter);
-                    if (op_I == op_J)
-                        ret = 1;
-                    else
-                    {
-                        ret = 0;
-                        break;
-                    }
-                }
-            }
-        }
+            
     }
     return ret;
 }
