@@ -448,18 +448,7 @@ static llvm::Statistic CSELdElim = {"", "CSELdElim", "CSE redundant loads"};
 static llvm::Statistic CSEStore2Load = {"", "CSEStore2Load", "CSE forwarded store to load"};
 static llvm::Statistic CSEStElim = {"", "CSEStElim", "CSE redundant stores"};
 
-static int cseSupports(LLVMValueRef I)
-{
-    return !(LLVMIsALoadInst(I) ||
-             LLVMIsAStoreInst(I) ||
-             LLVMIsACallInst(I) ||
-             LLVMIsAPHINode(I) ||
-             LLVMIsAExtractValueInst(I) ||
-             LLVMIsAFCmpInst(I) ||
-             LLVMIsAAllocaInst(I) ||
-             LLVMIsAVAArgInst(I) ||
-             LLVMIsATerminatorInst(I));
-}
+
 
 static bool areCSE(LLVMValueRef I, LLVMValueRef J)
 {
@@ -561,7 +550,6 @@ static void cse(Module *M)
 
             for (auto i = BB->begin(); i != BB->end(); i++)
             {
-                //if (!cseSupports(wrap(&(*i))))
                 if (LLVMIsALoadInst(wrap(&(*i))) || LLVMIsAStoreInst(wrap(&(*i))) || LLVMIsACallInst(wrap(&(*i))) || LLVMIsAPHINode(wrap(&(*i))) || LLVMIsAExtractValueInst(wrap(&(*i))) || LLVMIsAFCmpInst(wrap(&(*i))) || LLVMIsAAllocaInst(wrap(&(*i))) || LLVMIsAVAArgInst(wrap(&(*i))) || LLVMIsATerminatorInst(wrap(&(*i))))
                     continue;
 
