@@ -649,25 +649,26 @@ static void redundantStore(Module *M)
                 {
                     LLVMValueRef j;
                     j = LLVMGetNextInstruction(i);
-                    while (j != NULL)
+                    LLVMValueRef temp_j = j;
+
+                    j = LLVMGetNextInstruction(j);
+                    while (temp_j != NULL)
                     {
-                        if ((LLVMGetInstructionOpcode(j) == LLVMLoad) &&
-                            (!(LLVMGetVolatile(j))) &&
-                            (LLVMGetOperand(i, 1) == LLVMGetOperand(j, 0)) &&
-                            (LLVMTypeOf(j) == LLVMTypeOf(LLVMGetOperand(i, 0))))
+                        if ((LLVMGetInstructionOpcode(temp_j) == LLVMLoad) &&
+                            (!(LLVMGetVolatile(temp_j))) &&
+                            (LLVMGetOperand(i, 1) == LLVMGetOperand(temp_j, 0)) &&
+                            (LLVMTypeOf(temp_j) == LLVMTypeOf(LLVMGetOperand(i, 0))))
                         {
-                            LLVMValueRef rm = j;
-                            j = LLVMGetNextInstruction(j);
-                            LLVMReplaceAllUsesWith(rm, LLVMGetOperand(i, 0));
-                            LLVMInstructionEraseFromParent(rm);
+                            LLVMReplaceAllUsesWith(temp_j, LLVMGetOperand(i, 0));
+                            LLVMInstructionEraseFromParent(temp_j);
                             CSEStore2Load++;
                             continue;
                         }
 
-                        if ((LLVMGetInstructionOpcode(j) == LLVMStore) &&
+                        if ((LLVMGetInstructionOpcode(temp_j) == LLVMStore) &&
                                  (!(LLVMGetVolatile(i))) &&
-                                 (LLVMGetOperand(i, 1) == LLVMGetOperand(j, 1)) &&
-                                 (LLVMTypeOf(LLVMGetOperand(j, 0)) == LLVMTypeOf(LLVMGetOperand(i, 0))))
+                                 (LLVMGetOperand(i, 1) == LLVMGetOperand(temp_j, 1)) &&
+                                 (LLVMTypeOf(LLVMGetOperand(temp_j, 0)) == LLVMTypeOf(LLVMGetOperand(i, 0))))
                         {
                             LLVMValueRef rm = i;
                             i = LLVMGetNextInstruction(i);
@@ -677,14 +678,14 @@ static void redundantStore(Module *M)
                             move_to_next_store = 1;
                             break;
                         }
-                        if (LLVMGetInstructionOpcode(j) == LLVMStore ||
-                                 LLVMGetInstructionOpcode(j) == LLVMCall ||
-                                 LLVMGetInstructionOpcode(j) == LLVMLoad)
+                        if (LLVMGetInstructionOpcode(temp_j) == LLVMStore ||
+                                 LLVMGetInstructionOpcode(temp_j) == LLVMCall ||
+                                 LLVMGetInstructionOpcode(temp_j) == LLVMLoad)
                         {
                             break;
                         }
 
-                        j = LLVMGetNextInstruction(j);
+                        // j = LLVMGetNextInstruction(j);
                     }
 
                     if (move_to_next_store == 1)
