@@ -203,7 +203,7 @@ static void replicateCode(Function *F)
       {
         if (cloneMap.find((Instruction* const)(c->second->getOperand(i))) != cloneMap.end())
         {
-          c->second->setOperand(i, cloneMap.find((Instruction* const)(c->second->getOperand(i))));
+          c->second->setOperand(i, *cloneMap.find((Instruction* const)(c->second->getOperand(i))));
         }
       }
     }
