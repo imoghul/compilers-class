@@ -197,16 +197,16 @@ static void replicateCode(Function *F)
         cloneMap[&(*inst)] = c;
       }
     }
-    for (auto c = cloneMap.begin(); c != cloneMap.end(); c++)
-    {
-      for (int i = 0; i < c->second->getNumOperands(); ++i)
-      {
-        if (cloneMap.find((Instruction* const)(c->second->getOperand(i))) != cloneMap.end())
-        {
-          c->second->setOperand(i, cloneMap.find((Instruction* const)(c->second->getOperand(i)))->second );
-        }
-      }
-    }
+    // for (auto c = cloneMap.begin(); c != cloneMap.end(); c++)
+    // {
+    //   for (int i = 0; i < c->second->getNumOperands(); ++i)
+    //   {
+    //     if (cloneMap.find((Instruction* const)(c->second->getOperand(i))) != cloneMap.end())
+    //     {
+    //       c->second->setOperand(i, cloneMap.find((Instruction* const)(c->second->getOperand(i)))->second );
+    //     }
+    //   }
+    // }
   }
 }
 
