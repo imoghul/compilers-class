@@ -185,7 +185,7 @@ static void replicateCode(Function *F)
 {
   for (auto BB = F->begin(); BB != F->end(); BB++)
   {
-    unordered_map<Instruction,Instruction> cloneMap = unordered_map<Instruction>();
+    unordered_map<Instruction*,Instruction*> cloneMap = unordered_map<Instruction*,Instruction*>();
     for (auto inst = BB->begin(); inst != BB->end(); inst++)
     {
 
