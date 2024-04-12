@@ -201,9 +201,9 @@ static void replicateCode(Function *F)
     {
       for (int i = 0; i < c->second->getNumOperands(); ++i)
       {
-        if (cloneMap.find((c->second->getOperand(i))) != cloneMap.end())
+        if (cloneMap.find((Value* const)(c->second->getOperand(i))) != cloneMap.end())
         {
-          c->second->setOperand(i, cloneMap.find((c->second->getOperand(i))));
+          c->second->setOperand(i, cloneMap.find((Value* const)(c->second->getOperand(i))));
         }
       }
     }
