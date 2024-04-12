@@ -164,7 +164,7 @@ static void print_csv_file(std::string outputfile)
 }
 
 // Collect this statistic; increment for each instruction you add.
-static llvm::Statistic SWFTAdded = {"", "SWFTadd", "SWFT added instructions"};
+// static llvm::Statistic SWFTAdded = {"", "SWFTadd", "SWFT added instructions"};
 
 static bool toReplicate(const Instruction &i)
 {
@@ -228,7 +228,7 @@ static void SoftwareFaultTolerance(Module *M)
   {
     // CALL A FUNCTION TO REPLICATE CODE in *it
     // replicateCode(*it);
-     SWFTAdded++;
+    //  SWFTAdded++;
   }
 
   // for (std::vector<Function *>::iterator it = flist.begin(); it != flist.end(); it++)
