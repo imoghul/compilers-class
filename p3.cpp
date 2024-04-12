@@ -7,7 +7,7 @@
 #include <set>
 #include <vector>
 #include <utility>
-
+#include <unordered_map>
 #include "llvm-c/Core.h"
 
 #include "llvm/IR/LLVMContext.h"
@@ -32,63 +32,59 @@
 #include "llvm/Passes/PassBuilder.h"
 #include "llvm/Analysis/LoopAnalysisManager.h"
 #include "llvm/IR/PassManager.h"
-//#include "llvm/Analysis/CGSCCAnalysisManager.h"
-//#include "llvm/Analysis/ModuleAnalysisManager.h"
-
+// #include "llvm/Analysis/CGSCCAnalysisManager.h"
+// #include "llvm/Analysis/ModuleAnalysisManager.h"
 
 using namespace llvm;
 
 static LLVMContext Context;
 
-LLVMContext& getGlobalContext() {
+LLVMContext &getGlobalContext()
+{
   return Context;
 }
-
 
 static void SoftwareFaultTolerance(Module *);
 
 static void print_csv_file(std::string outputfile);
 
 static cl::opt<std::string>
-        InputFilename(cl::Positional, cl::desc("<input bitcode>"), cl::Required, cl::init("-"));
+    InputFilename(cl::Positional, cl::desc("<input bitcode>"), cl::Required, cl::init("-"));
 
 static cl::opt<std::string>
-        OutputFilename(cl::Positional, cl::desc("<output bitcode>"), cl::Required, cl::init("out.bc"));
+    OutputFilename(cl::Positional, cl::desc("<output bitcode>"), cl::Required, cl::init("out.bc"));
 
 static cl::opt<bool>
-        NoSWFT("no-swft",
-              cl::desc("Do not perform SWFT."),
-              cl::init(false));
-
-
-static cl::opt<bool>
-        Verbose("verbose",
-                    cl::desc("Verbose stats."),
-                    cl::init(false));
+    NoSWFT("no-swft",
+           cl::desc("Do not perform SWFT."),
+           cl::init(false));
 
 static cl::opt<bool>
-        NoCheck("no",
-                cl::desc("Do not check for valid IR."),
-                cl::init(false));
+    Verbose("verbose",
+            cl::desc("Verbose stats."),
+            cl::init(false));
+
+static cl::opt<bool>
+    NoCheck("no",
+            cl::desc("Do not check for valid IR."),
+            cl::init(false));
 
 // Use this to enable your bonus code
 static cl::opt<bool>
-        Bonus("bonus",
-                cl::desc("Run the bonus code."),
-                cl::init(false));
+    Bonus("bonus",
+          cl::desc("Run the bonus code."),
+          cl::init(false));
 
 // Use these to control whether or not parts of your pass run
 static cl::opt<bool>
-        NoReplicate("no-replicate",
-              cl::desc("Do not perform code replication."),
-              cl::init(false));
+    NoReplicate("no-replicate",
+                cl::desc("Do not perform code replication."),
+                cl::init(false));
 
 static cl::opt<bool>
-        NoControlProtection("no-control-protection",
-              cl::desc("Do not perform control flow protection."),
-              cl::init(false));
-
-
+    NoControlProtection("no-control-protection",
+                        cl::desc("Do not perform control flow protection."),
+                        cl::init(false));
 
 void RunO2(Module *M);
 void BuildHelperFunctions(Module *);
@@ -96,97 +92,159 @@ void summarize(Module *M);
 FunctionCallee AssertFT;
 FunctionCallee AssertCFG;
 
-int main(int argc, char **argv) {
-    // Parse command line arguments
-    cl::ParseCommandLineOptions(argc, argv, "llvm system compiler\n");
+int main(int argc, char **argv)
+{
+  // Parse command line arguments
+  cl::ParseCommandLineOptions(argc, argv, "llvm system compiler\n");
 
-    // Handle creating output files and shutting down properly
-    llvm_shutdown_obj Y;  // Call llvm_shutdown() on exit.
+  // Handle creating output files and shutting down properly
+  llvm_shutdown_obj Y; // Call llvm_shutdown() on exit.
 
-    // LLVM idiom for constructing output file.
-    std::unique_ptr<ToolOutputFile> Out;
-    std::string ErrorInfo;
-    std::error_code EC;
-    Out.reset(new ToolOutputFile(OutputFilename.c_str(), EC,
-                                 sys::fs::OF_None));
+  // LLVM idiom for constructing output file.
+  std::unique_ptr<ToolOutputFile> Out;
+  std::string ErrorInfo;
+  std::error_code EC;
+  Out.reset(new ToolOutputFile(OutputFilename.c_str(), EC,
+                               sys::fs::OF_None));
 
-    EnableStatistics();
+  EnableStatistics();
 
-    // Read in module
-    SMDiagnostic Err;
-    std::unique_ptr<Module> M;
-    M = parseIRFile(InputFilename, Err, Context);
+  // Read in module
+  SMDiagnostic Err;
+  std::unique_ptr<Module> M;
+  M = parseIRFile(InputFilename, Err, Context);
 
-    // If errors, fail
-    if (M.get() == 0)
-    {
-        Err.print(argv[0], errs());
-        return 1;
-    }
+  // If errors, fail
+  if (M.get() == 0)
+  {
+    Err.print(argv[0], errs());
+    return 1;
+  }
 
-    // Run O2 optimizations
-    RunO2(M.get());
-  
-    if (!NoSWFT) {
-      BuildHelperFunctions(M.get());      
-      SoftwareFaultTolerance(M.get());
-    }
+  // Run O2 optimizations
+  RunO2(M.get());
 
-    // Collect statistics on Module
-    summarize(M.get());
-    print_csv_file(OutputFilename);
+  if (!NoSWFT)
+  {
+    BuildHelperFunctions(M.get());
+    SoftwareFaultTolerance(M.get());
+  }
 
-    if (Verbose)
-        PrintStatistics(errs());
+  // Collect statistics on Module
+  summarize(M.get());
+  print_csv_file(OutputFilename);
 
-    // Verify integrity of Module, do this by default
-    if (!NoCheck)
-    {
-        legacy::PassManager Passes;
-        Passes.add(createVerifierPass());
-        Passes.run(*M.get());
-    }
+  if (Verbose)
+    PrintStatistics(errs());
 
-    // Write final bitcode
-    WriteBitcodeToFile(*M.get(), Out->os());
-    Out->keep();
+  // Verify integrity of Module, do this by default
+  if (!NoCheck)
+  {
+    legacy::PassManager Passes;
+    Passes.add(createVerifierPass());
+    Passes.run(*M.get());
+  }
 
-    return 0;
+  // Write final bitcode
+  WriteBitcodeToFile(*M.get(), Out->os());
+  Out->keep();
+
+  return 0;
 }
 
 static void print_csv_file(std::string outputfile)
 {
-    std::ofstream stats(outputfile + ".stats");
-    auto a = GetStatistics();
-    for (auto p : a) {
-        stats << p.first.str() << "," << p.second << std::endl;
-    }
-    stats.close();
+  std::ofstream stats(outputfile + ".stats");
+  auto a = GetStatistics();
+  for (auto p : a)
+  {
+    stats << p.first.str() << "," << p.second << std::endl;
+  }
+  stats.close();
 }
 
 // Collect this statistic; increment for each instruction you add.
 static llvm::Statistic SWFTAdded = {"", "SWFTadd", "SWFT added instructions"};
 
+static bool toReplicate(const Instruction &i)
+{
+  switch (i.opcode())
+  {
+  case Instruction::Alloca:
+  case Instruction::Call:
+  case Instruction::Store:
+  case Instruction::ICmp:
+  case Instruction::FCmp:
+    // branch
+    return false;
+  }
+  return true;
+}
 
+static void replicateCode(Function *F)
+{
+  for (auto BB = F->begin(); BB != F->end(); BB++)
+  {
+    unordered_map<Instruction> cloneMap = unordered_map<Instruction>();
+    for (auto inst = BB->begin(); inst != BB->end(); inst++)
+    {
 
-static void SoftwareFaultTolerance(Module *M) {
+      if (toReplicate(*inst))
+      {
+        auto c = inst->clone();
+        c->insertBefore(*inst);
+        SWFTAdded++;
+        cloneMap[&(*inst)] = c;
+      }
+    }
+    for (auto c = cloneMap.begin(); c != cloneMap.end(); c++)
+    {
+      for (int i = 0; i < c->getNumOperands(); ++i)
+      {
+        if (cloneMap.find(&(c->getOperand(i))) != cloneMap.end())
+        {
+          c->setOperand(i, cloneMap.find(&(c->getOperand(i))));
+        }
+      }
+    }
+  }
+}
+
+static void SoftwareFaultTolerance(Module *M)
+{
   Module::FunctionListType &list = M->getFunctionList();
 
-  std::vector<Function*> flist;
+  std::vector<Function *> flist;
   // FIND THE ASSERT FUNCTIONS AND DO NOT INSTRUMENT THEM
-  for(Module::FunctionListType::iterator it = list.begin(); it!=list.end(); it++) {
+  for (Module::FunctionListType::iterator it = list.begin(); it != list.end(); it++)
+  {
     Function *fptr = &*it;
     if (fptr->size() > 0 && fptr != AssertFT.getCallee() && fptr != AssertCFG.getCallee())
       flist.push_back(fptr);
   }
-
+ 
   // PROTECT CODE IN EACH FUNCTION
-  for(std::vector<Function*>::iterator it=flist.begin(); it!=flist.end(); it++)
-    {
-      // CALL A FUNCTION TO REPLICATE CODE in *it
-    }
+  for (std::vector<Function *>::iterator it = flist.begin(); it != flist.end(); it++)
+  {
+    // CALL A FUNCTION TO REPLICATE CODE in *it
+    replicateCode(*it);
+  }
+
+  // for (std::vector<Function *>::iterator it = flist.begin(); it != flist.end(); it++)
+  // {
+  //   for (auto BB = F->begin(); BB != F->end(); BB++)
+  //   {
+  //     unordered_map<Instruction> destMap = unordered_map<Instruction>();
+  //     unordered_map<Instruction> diffMap = unordered_map<Instruction>();
+      
+  //     int inst_counter = 0;
+  //     for (auto inst = BB->begin(); inst != BB->end(); inst++)
+  //     {
+        
+
+
+  //       inst_counter++;
+  //     }
+  //   }
+  // }
 }
-
-
-
-
