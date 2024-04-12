@@ -34,7 +34,7 @@
 #include "llvm/IR/PassManager.h"
 // #include "llvm/Analysis/CGSCCAnalysisManager.h"
 // #include "llvm/Analysis/ModuleAnalysisManager.h"
-
+using std::unordered_map;
 using namespace llvm;
 
 static LLVMContext Context;
@@ -168,7 +168,7 @@ static llvm::Statistic SWFTAdded = {"", "SWFTadd", "SWFT added instructions"};
 
 static bool toReplicate(const Instruction &i)
 {
-  switch (i.opcode())
+  switch (i.getOpcode())
   {
   case Instruction::Alloca:
   case Instruction::Call:
@@ -192,7 +192,7 @@ static void replicateCode(Function *F)
       if (toReplicate(*inst))
       {
         auto c = inst->clone();
-        c->insertBefore(*inst);
+        c->insertBefore(&(*inst));
         SWFTAdded++;
         cloneMap[&(*inst)] = c;
       }
