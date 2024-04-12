@@ -164,7 +164,7 @@ static void print_csv_file(std::string outputfile)
 }
 
 // Collect this statistic; increment for each instruction you add.
-// static llvm::Statistic SWFTAdded = {"", "SWFTadd", "SWFT added instructions"};
+static llvm::Statistic SWFTAdded = {"", "SWFTadd", "SWFT added instructions"};
 
 static bool toReplicate(const Instruction &i)
 {
@@ -181,34 +181,34 @@ static bool toReplicate(const Instruction &i)
   return true;
 }
 
-// static void replicateCode(Function *F)
-// {
-//   for (auto BB = F->begin(); BB != F->end(); BB++)
-//   {
-//     unordered_map<Instruction*,Instruction*> cloneMap = unordered_map<Instruction*,Instruction*>();
-//     for (auto inst = BB->begin(); inst != BB->end(); inst++)
-//     {
+static void replicateCode(Function *F)
+{
+  for (auto BB = F->begin(); BB != F->end(); BB++)
+  {
+    unordered_map<Instruction*,Instruction*> cloneMap = unordered_map<Instruction*,Instruction*>();
+    for (auto inst = BB->begin(); inst != BB->end(); inst++)
+    {
 
-//       if (toReplicate(*inst))
-//       {
-//         auto c = inst->clone();
-//         c->insertBefore(&(*inst));
-//         SWFTAdded++;
-//         cloneMap[&(*inst)] = c;
-//       }
-//     }
-//     for (auto c = cloneMap.begin(); c != cloneMap.end(); c++)
-//     {
-//       for (int i = 0; i < c->second->getNumOperands(); ++i)
-//       {
-//         if (cloneMap.find((Instruction* const)(c->second->getOperand(i))) != cloneMap.end())
-//         {
-//           c->second->setOperand(i, cloneMap.find((Instruction* const)(c->second->getOperand(i)))->second );
-//         }
-//       }
-//     }
-//   }
-// }
+      if (toReplicate(*inst))
+      {
+        auto c = inst->clone();
+        c->insertBefore(&(*inst));
+        SWFTAdded++;
+        cloneMap[&(*inst)] = c;
+      }
+    }
+    for (auto c = cloneMap.begin(); c != cloneMap.end(); c++)
+    {
+      for (int i = 0; i < c->second->getNumOperands(); ++i)
+      {
+        if (cloneMap.find((Instruction* const)(c->second->getOperand(i))) != cloneMap.end())
+        {
+          c->second->setOperand(i, cloneMap.find((Instruction* const)(c->second->getOperand(i)))->second );
+        }
+      }
+    }
+  }
+}
 
 static void SoftwareFaultTolerance(Module *M)
 {
@@ -227,8 +227,7 @@ static void SoftwareFaultTolerance(Module *M)
   for (std::vector<Function *>::iterator it = flist.begin(); it != flist.end(); it++)
   {
     // CALL A FUNCTION TO REPLICATE CODE in *it
-    // replicateCode(*it);
-    //  SWFTAdded++;
+    replicateCode(*it);
   }
 
   // for (std::vector<Function *>::iterator it = flist.begin(); it != flist.end(); it++)
