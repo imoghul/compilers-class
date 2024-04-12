@@ -228,6 +228,7 @@ static void SoftwareFaultTolerance(Module *M)
   {
     // CALL A FUNCTION TO REPLICATE CODE in *it
     // replicateCode(*it);
+     SWFTAdded++;
   }
 
   // for (std::vector<Function *>::iterator it = flist.begin(); it != flist.end(); it++)
