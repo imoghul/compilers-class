@@ -199,11 +199,11 @@ static void replicateCode(Function *F)
     }
     for (auto c = cloneMap.begin(); c != cloneMap.end(); c++)
     {
-      for (int i = 0; i < c->getNumOperands(); ++i)
+      for (int i = 0; i < c[1]->getNumOperands(); ++i)
       {
-        if (cloneMap.find(&(c->getOperand(i))) != cloneMap.end())
+        if (cloneMap.find(&(c[1]->getOperand(i))) != cloneMap.end())
         {
-          c->setOperand(i, cloneMap.find(&(c->getOperand(i))));
+          c[1]->setOperand(i, cloneMap.find(&(c[1]->getOperand(i))));
         }
       }
     }
