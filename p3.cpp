@@ -290,31 +290,31 @@ static void SoftwareFaultTolerance(Module *M)
   }
  
   // PROTECT CODE IN EACH FUNCTION
-  for (std::vector<Function *>::iterator it = flist.begin(); it != flist.end(); it++)
-  {
-    // CALL A FUNCTION TO REPLICATE CODE in *it
-    replicateCode(*it);
-  }
+  // for (std::vector<Function *>::iterator it = flist.begin(); it != flist.end(); it++)
+  // {
+  //   // CALL A FUNCTION TO REPLICATE CODE in *it
+  //   replicateCode(*it);
+  // }
 
 
-  for (std::vector<Function *>::iterator it = flist.begin(); it != flist.end(); it++)
-  {
-    unordered_map<Instruction*,Instruction*> destMap = unordered_map<Instruction*,Instruction*>();
-    unordered_map<Instruction*,Instruction*> diffMap = unordered_map<Instruction*,Instruction*>();
+  // for (std::vector<Function *>::iterator it = flist.begin(); it != flist.end(); it++)
+  // {
+  //   unordered_map<Instruction*,Instruction*> destMap = unordered_map<Instruction*,Instruction*>();
+  //   unordered_map<Instruction*,Instruction*> diffMap = unordered_map<Instruction*,Instruction*>();
 
-    for (auto BB = (*it)->begin(); BB != (*it)->end(); BB++)
-    {
-        auto next = BB;
-        next++;
+  //   for (auto BB = (*it)->begin(); BB != (*it)->end(); BB++)
+  //   {
+  //       auto next = BB;
+  //       next++;
         
-        if(BB == (*it)->begin()){
-          InsertXorInEntry(&(*BB));
-        }else if (next == (*it)->end()){
-          InsertConclusionInEnd(&(*BB));
-        }else {
-          InsertControlFlowVerification(&(*BB));
-        }
-    }
-    break;
-  }
+  //       if(BB == (*it)->begin()){
+  //         InsertXorInEntry(&(*BB));
+  //       }else if (next == (*it)->end()){
+  //         InsertConclusionInEnd(&(*BB));
+  //       }else {
+  //         InsertControlFlowVerification(&(*BB));
+  //       }
+  //   }
+  //   break;
+  // }
 }
