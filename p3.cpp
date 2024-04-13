@@ -265,7 +265,7 @@ static BasicBlock::iterator findNextBranch(BasicBlock::iterator bb, BasicBlock::
 
 static void InsertXorInEntry(BasicBlock* BB){
   for(auto inst =findNextBranch(BB->begin(),BB->end()) ;inst!=BB->end();inst = findNextBranch(++inst,BB->end())){
-    auto* branch = dyn_cast<BranchInst>(&(*inst));
+    // auto* branch = dyn_cast<BranchInst>(&(*inst));
   }
   return;
 }
@@ -296,7 +296,7 @@ static void SoftwareFaultTolerance(Module *M)
     replicateCode(*it);
   }
 
-  int numBB = 0;
+
   for (std::vector<Function *>::iterator it = flist.begin(); it != flist.end(); it++)
   {
     unordered_map<Instruction*,Instruction*> destMap = unordered_map<Instruction*,Instruction*>();
