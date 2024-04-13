@@ -9,7 +9,7 @@
 #include <utility>
 #include <unordered_map>
 #include "llvm-c/Core.h"
-
+#include <stdint.h>
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Verifier.h"
@@ -32,8 +32,11 @@
 #include "llvm/Passes/PassBuilder.h"
 #include "llvm/Analysis/LoopAnalysisManager.h"
 #include "llvm/IR/PassManager.h"
-// #include "llvm/Analysis/CGSCCAnalysisManager.h"
-// #include "llvm/Analysis/ModuleAnalysisManager.h"
+
+
+#define BB_TO_ID(BB)    ((unsigned int)(((uintptr_t)BB)))
+
+
 using std::unordered_map;
 using namespace llvm;
 
@@ -43,7 +46,10 @@ LLVMContext &getGlobalContext()
 {
   return Context;
 }
-
+static BasicBlock::iterator findNextBranch(BasicBlock::iterator bb, BasicBlock::iterator end);
+static void InsertXorInEntry(BasicBlock* BB);
+static void InsertControlFlowVerification(BasicBlock* BB);
+static void InsertConclusionInEnd(BasicBlock* BB);
 static void SoftwareFaultTolerance(Module *);
 
 static void print_csv_file(std::string outputfile);
@@ -249,6 +255,27 @@ static void replicateCode(Function *F)
   }
 }
 
+static BasicBlock::iterator findNextBranch(BasicBlock::iterator bb, BasicBlock::iterator end){
+  for(auto it = bb;it!=end;++it){
+    if(dyn_cast<BranchInst>(&(*it))){return it;}
+  }
+  return end;
+}
+
+
+static void InsertXorInEntry(BasicBlock* BB){
+  for(auto inst =findNextBranch(BB->begin(),BB->end()) ;inst!=BB->end();inst = findNextBranch(++inst,BB->end())){
+    auto* branch = dyn_cast<BranchInst>(&(*inst));
+  }
+  return;
+}
+static void InsertControlFlowVerification(BasicBlock* BB){
+  return;
+}
+static void InsertConclusionInEnd(BasicBlock* BB){
+  return;
+}
+
 static void SoftwareFaultTolerance(Module *M)
 {
   Module::FunctionListType &list = M->getFunctionList();
@@ -269,21 +296,25 @@ static void SoftwareFaultTolerance(Module *M)
     replicateCode(*it);
   }
 
-  // for (std::vector<Function *>::iterator it = flist.begin(); it != flist.end(); it++)
-  // {
-  //   for (auto BB = F->begin(); BB != F->end(); BB++)
-  //   {
-  //     unordered_map<Instruction> destMap = unordered_map<Instruction>();
-  //     unordered_map<Instruction> diffMap = unordered_map<Instruction>();
-      
-  //     int inst_counter = 0;
-  //     for (auto inst = BB->begin(); inst != BB->end(); inst++)
-  //     {
+  int numBB = 0;
+  for (std::vector<Function *>::iterator it = flist.begin(); it != flist.end(); it++)
+  {
+    unordered_map<Instruction*,Instruction*> destMap = unordered_map<Instruction*,Instruction*>();
+    unordered_map<Instruction*,Instruction*> diffMap = unordered_map<Instruction*,Instruction*>();
+
+    for (auto BB = (*it)->begin(); BB != (*it)->end(); BB++)
+    {
+        auto next = BB;
+        next++;
         
-
-
-  //       inst_counter++;
-  //     }
-  //   }
-  // }
+        if(BB == (*it)->begin()){
+          InsertXorInEntry(&(*BB));
+        }else if (next == (*it)->end()){
+          InsertConclusionInEnd(&(*BB));
+        }else {
+          InsertControlFlowVerification(&(*BB));
+        }
+    }
+    break;
+  }
 }
