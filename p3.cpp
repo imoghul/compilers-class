@@ -210,6 +210,7 @@ static bool toReplicate(const Instruction &i)
     case Instruction::SRem:
     case Instruction::FRem:
     case Instruction::Shl:
+    case Instruction::Load:
     case Instruction::LShr:
     case Instruction::AShr:
     case Instruction::And:
@@ -252,7 +253,6 @@ static void replicateCode(Function *F)
       {
         auto c = inst->clone();
         c->insertBefore(&(*inst));
-        SWFTAdded++;
         SWFTAdded++;
         cloneMap[&(*inst)] = c;
       }
