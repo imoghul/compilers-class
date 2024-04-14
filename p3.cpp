@@ -195,14 +195,14 @@ static bool toReplicate(const Instruction &i)
     case Instruction::Alloca:
     case Instruction::Call:
     case Instruction::Store:
+    case Instruction::ICmp:
+    case Instruction::FCmp:
     case Instruction::Ret:
       // branch
       return false;
     case Instruction::Add:
     case Instruction::FNeg:
     case Instruction::FAdd:
-    case Instruction::ICmp:
-    case Instruction::FCmp:
     case Instruction::Sub:
     case Instruction::FSub:
     case Instruction::Mul:
