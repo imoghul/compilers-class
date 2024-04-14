@@ -47,6 +47,8 @@ unordered_map<BasicBlock*,std::vector<BasicBlock*>> BBsuccessors = unordered_map
 unordered_map<unsigned int,std::vector<unsigned int>> BBsuccessors_ID = unordered_map<unsigned int,std::vector<unsigned int>>();
 
 unordered_map<BasicBlock*,std::pair<PHINode*,PHINode*>> BBPhis = unordered_map<BasicBlock*,std::pair<PHINode*,PHINode*>>();
+unordered_map<BasicBlock*,Value*> destMap = unordered_map<BasicBlock*,Value*>();
+unordered_map<BasicBlock*,Value*> diffMap = unordered_map<BasicBlock*,Value*>();
 
 static LLVMContext Context;
 
@@ -56,7 +58,7 @@ LLVMContext &getGlobalContext()
 }
 static BasicBlock::iterator findNextBranch(BasicBlock::iterator bb, BasicBlock::iterator end);
 static void InsertXorInEntry(BasicBlock* BB);
-static void InsertControlFlowVerification(BasicBlock* BB);
+static void InsertControlFlowVerification(Module* M, BasicBlock* BB);
 static void InsertConclusionInEnd(BasicBlock* BB);
 static void SoftwareFaultTolerance(Module *);
 
@@ -297,10 +299,11 @@ static void InsertXorInEntry(BasicBlock* BB){
   }
   // make xor between bb1 and bb4
   Value* xorInst = Builder.CreateXor(Builder.getInt32(BB_TO_ID(bb1)),bb4);
-
+  // add to diff map
+  diffMap[BB] = xorInst;
   return;
 }
-static void InsertControlFlowVerification(BasicBlock* BB){
+static void InsertControlFlowVerification(Module* M, BasicBlock* BB){
   if(!BB) return;
   IRBuilder<> Builder(BB);
   BranchInst* branch = nullptr;
@@ -314,15 +317,24 @@ static void InsertControlFlowVerification(BasicBlock* BB){
   // insert phi to get previous diff
   std::string phi_name = std::to_string(BB_TO_ID(BB))+"_diff_phi";
   PHINode* diff_phi = Builder.CreatePHI(type,BBsuccessors[BB].size(),phi_name);
+  // diff_phi->addIncoming();
+
   // insert phi to get previous dest
   phi_name = std::to_string(BB_TO_ID(BB))+"_dest_phi";
   PHINode* dest_phi = Builder.CreatePHI(type,BBsuccessors[BB].size(),phi_name);
   // insert xor and store in this bb's dest
-  Builder.CreateXor(diff_phi,dest_phi);
+  Value* comp_dest=  Builder.CreateXor(diff_phi,dest_phi);
   // do the compare
-
+  Value* cmp = Builder.CreateICmpEQ(comp_dest,Builder.getInt32(BB_TO_ID(BB)));
   // do the zext
+  Value* zext = Builder.CreateZExt(cmp,type);
   // call assert
+  std::vector<Value*> args;
+  args.push_back(zext); // boolean
+  args.push_back(Builder.getInt32(BB_TO_ID(BB))); // unique id
+  Function *F = M->getFunction("assert_ft");
+  Builder.CreateCall(F->getFunctionType(),F, args);
+
 
   // add xor before final br
   InsertXorInEntry(BB);
@@ -359,29 +371,27 @@ static void SoftwareFaultTolerance(Module *M)
   for (std::vector<Function *>::iterator it = flist.begin(); it != flist.end(); it++)
   {
     // CALL A FUNCTION TO REPLICATE CODE in *it
-    // replicateCode(*it);
+    replicateCode(*it);
   }
 
   // fill in all successors
-  for (std::vector<Function *>::iterator it = flist.begin(); it != flist.end(); it++){
-    for (auto BB = (*it)->begin(); BB != (*it)->end(); BB++){
-      // BBsuccessors[&(*BB)] = std::vector<BasicBlock*>();
-      for(auto inst = findNextBranch(BB->begin(),BB->end()) ;inst!=BB->end();inst = findNextBranch(++inst,BB->end())){
-        auto* branch = dyn_cast<BranchInst>(&(*inst));
-        for(uint i = 0;i<branch->getNumSuccessors();++i){
-          BBsuccessors[(branch->getSuccessor(i))].push_back((&(*BB)));
-          BBsuccessors_ID[BB_TO_ID(branch->getSuccessor(i))].push_back(BB_TO_ID(&(*BB)));
-          // printf("%d %d\n",BB_TO_ID(branch->getSuccessor(i)),BBsuccessors[(branch->getSuccessor(i))].size());
-        }
-      }
-    }
-  }
+  // for (std::vector<Function *>::iterator it = flist.begin(); it != flist.end(); it++){
+  //   for (auto BB = (*it)->begin(); BB != (*it)->end(); BB++){
+  //     // BBsuccessors[&(*BB)] = std::vector<BasicBlock*>();
+  //     for(auto inst = findNextBranch(BB->begin(),BB->end()) ;inst!=BB->end();inst = findNextBranch(++inst,BB->end())){
+  //       auto* branch = dyn_cast<BranchInst>(&(*inst));
+  //       for(uint i = 0;i<branch->getNumSuccessors();++i){
+  //         BBsuccessors[(branch->getSuccessor(i))].push_back((&(*BB)));
+  //         BBsuccessors_ID[BB_TO_ID(branch->getSuccessor(i))].push_back(BB_TO_ID(&(*BB)));
+  //         // printf("%d %d\n",BB_TO_ID(branch->getSuccessor(i)),BBsuccessors[(branch->getSuccessor(i))].size());
+  //       }
+  //     }
+  //   }
+  // }
 
-  // perform control flow validation
+  // // perform control flow validation
   // for (std::vector<Function *>::iterator it = flist.begin(); it != flist.end(); it++)
   // {
-  //   unordered_map<Instruction*,Instruction*> destMap = unordered_map<Instruction*,Instruction*>();
-  //   unordered_map<Instruction*,Instruction*> diffMap = unordered_map<Instruction*,Instruction*>();
 
   //   for (auto BB = (*it)->begin(); BB != (*it)->end(); BB++)
   //   {
@@ -393,7 +403,7 @@ static void SoftwareFaultTolerance(Module *M)
   //       }else if (next == (*it)->end()){
   //         InsertConclusionInEnd(&(*BB));
   //       }else {
-  //         InsertControlFlowVerification(&(*BB));
+  //         InsertControlFlowVerification(M,&(*BB));
   //       }
   //   }
   //   // break;
