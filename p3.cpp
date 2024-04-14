@@ -302,7 +302,10 @@ static void InsertXorInEntry(BasicBlock* BB){
   BasicBlock* bb2 = branch ? branch->getSuccessor(0) : switchInst->getSuccessor(0);
   Value* bb4 = Builder.getInt32(BB_TO_ID(bb2));
 
-  if(switchInst) printf("switch has %d\n",switchInst->getNumSuccessors());
+  if(switchInst) {
+    switchInst->print(errs());
+    printf("\nswitch has %d\n",switchInst->getNumSuccessors());
+  }
 
   if(branch && branch->isConditional()){
     // make select between bb2 and bb3
@@ -328,7 +331,7 @@ static void InsertControlFlowVerification(Module* M, BasicBlock* BB){
 
 
   IRBuilder<> Builder(BB);
-  BranchInst* branch = nullptr;
+  // BranchInst* branch = nullptr;
   Builder.SetInsertPoint(&(*(inst)));
 
   Value* v = Builder.getInt32(0);
@@ -373,10 +376,10 @@ static void InsertControlFlowVerification(Module* M, BasicBlock* BB){
   // delete type;
 }
 static void InsertConclusionInEnd(BasicBlock* BB){
-  for(auto inst = findNextBranch(BB->begin(),BB->end()) ;inst!=BB->end();inst = findNextBranch(++inst,BB->end())){
-    auto* branch = dyn_cast<BranchInst>(&(*inst));
-  }
-  return;
+  // for(auto inst = findNextBranch(BB->begin(),BB->end()) ;inst!=BB->end();inst = findNextBranch(++inst,BB->end())){
+  //   auto* branch = dyn_cast<BranchInst>(&(*inst));
+  // }
+  // return;
 }
 
 static void SoftwareFaultTolerance(Module *M)
