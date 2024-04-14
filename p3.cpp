@@ -215,25 +215,25 @@ static bool toReplicate(const Instruction &i)
     case Instruction::And:
     case Instruction::Or:
     case Instruction::Xor:
-    case Instruction::GetElementPtr:
-    case Instruction::Trunc:
-    case Instruction::ZExt:
-    case Instruction::SExt:
-    case Instruction::FPToUI:
-    case Instruction::FPToSI:
-    case Instruction::UIToFP:
-    case Instruction::SIToFP:
-    case Instruction::FPTrunc:
-    case Instruction::FPExt:
-    case Instruction::PtrToInt:
-    case Instruction::IntToPtr:
-    case Instruction::BitCast:
-    case Instruction::AddrSpaceCast:
-    case Instruction::ExtractElement:
-    case Instruction::InsertElement:
-    case Instruction::ShuffleVector:
-    case Instruction::ExtractValue:
-    case Instruction::InsertValue:
+    // case Instruction::GetElementPtr:
+    // case Instruction::Trunc:
+    // case Instruction::ZExt:
+    // case Instruction::SExt:
+    // case Instruction::FPToUI:
+    // case Instruction::FPToSI:
+    // case Instruction::UIToFP:
+    // case Instruction::SIToFP:
+    // case Instruction::FPTrunc:
+    // case Instruction::FPExt:
+    // case Instruction::PtrToInt:
+    // case Instruction::IntToPtr:
+    // case Instruction::BitCast:
+    // case Instruction::AddrSpaceCast:
+    // case Instruction::ExtractElement:
+    // case Instruction::InsertElement:
+    // case Instruction::ShuffleVector:
+    // case Instruction::ExtractValue:
+    // case Instruction::InsertValue:
       return true;
   }
   return false;
@@ -252,7 +252,6 @@ static void replicateCode(Function *F)
       {
         auto c = inst->clone();
         c->insertBefore(&(*inst));
-        SWFTAdded++;
         SWFTAdded++;
         cloneMap[&(*inst)] = c;
       }
