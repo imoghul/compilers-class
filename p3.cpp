@@ -252,7 +252,8 @@ static void replicateCode(Function *F)
       {
         auto c = inst->clone();
         c->insertBefore(&(*inst));
-        SWFTAdded++++;
+        SWFTAdded++;
+        SWFTAdded++;
         cloneMap[&(*inst)] = c;
       }
     }
