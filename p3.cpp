@@ -372,8 +372,11 @@ static void InsertControlFlowVerification(Module* M, BasicBlock* BB){
   std::vector<Value*> args;
   args.push_back(zext); // boolean
   args.push_back(Builder.getInt32(BB_TO_ID(BB))); // unique id
+  Function *F = M->getFunction("assert_ft");
+  Builder.CreateCall(F->getFunctionType(),F, args);
+  
   args.push_back(Builder.getInt32(0)); // unique id
-  Function *F = M->getFunction("assert_cfg_ft");
+  F = M->getFunction("assert_cfg_ft");
   Builder.CreateCall(F->getFunctionType(),F, args);
   SWFTAdded++;
 
