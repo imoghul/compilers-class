@@ -195,12 +195,12 @@ static bool toReplicate(const Instruction &i)
     case Instruction::Alloca:
     case Instruction::Call:
     case Instruction::Store:
-    case Instruction::ICmp:
-    case Instruction::FCmp:
     case Instruction::Ret:
       // branch
       return false;
     case Instruction::Add:
+    // case Instruction::ICmp:
+    // case Instruction::FCmp:
     case Instruction::FNeg:
     case Instruction::FAdd:
     case Instruction::Sub:
@@ -372,7 +372,8 @@ static void InsertControlFlowVerification(Module* M, BasicBlock* BB){
   std::vector<Value*> args;
   args.push_back(zext); // boolean
   args.push_back(Builder.getInt32(BB_TO_ID(BB))); // unique id
-  Function *F = M->getFunction("assert_ft");
+  args.push_back(Builder.getInt32(0)); // unique id
+  Function *F = M->getFunction("assert_cfg_ft");
   Builder.CreateCall(F->getFunctionType(),F, args);
   SWFTAdded++;
 
@@ -406,14 +407,14 @@ static void SoftwareFaultTolerance(Module *M)
     if (fptr->size() > 0 && fptr != AssertFT.getCallee() && fptr != AssertCFG.getCallee())
       flist.push_back(fptr);
   }
- 
+  
   // PROTECT CODE IN EACH FUNCTION
   for (std::vector<Function *>::iterator it = flist.begin(); it != flist.end(); it++)
   {
     // CALL A FUNCTION TO REPLICATE CODE in *it
     replicateCode(*it);
   }
-
+  
   // fill in all successors
   for (std::vector<Function *>::iterator it = flist.begin(); it != flist.end(); it++){
     for (auto BB = (*it)->begin(); BB != (*it)->end(); BB++){
