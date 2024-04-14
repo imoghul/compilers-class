@@ -317,9 +317,11 @@ static void InsertXorInEntry(BasicBlock* BB){
     assert(branch->getNumSuccessors()>1);
     BasicBlock* bb3 = branch->getSuccessor(1);
     bb4 = Builder.CreateSelect(branch->getCondition(),Builder.getInt32(BB_TO_ID(bb2)),Builder.getInt32(BB_TO_ID(bb3)));
+    SWFTAdded++;
   }
   // make xor between bb1 and bb4
   Value* xorInst = Builder.CreateXor(Builder.getInt32(BB_TO_ID(bb1)),bb4);
+  SWFTAdded++;
   assert(xorInst);
   // add to diff map
   diffMap[BB] = xorInst;
@@ -346,28 +348,33 @@ static void InsertControlFlowVerification(Module* M, BasicBlock* BB){
   // insert phi to get previous diff (ie use the diffMap to fill in phi)
   std::string phi_name = (BB->hasName() ? BB->getName().str() : std::to_string(BB_TO_ID(BB)))+"_diff_phi";
   PHINode* diff_phi = Builder.CreatePHI(type,BBsuccessors[BB].size(),phi_name);
+  SWFTAdded++;
   BBDiffPhis[BB] = diff_phi;
   // diff_phi->addIncoming();
 
   // insert phi to get previous dest (ie use the destMap to fill in phi)
   phi_name = (BB->hasName() ? BB->getName().str() : std::to_string(BB_TO_ID(BB)))+"_dest_phi";
   PHINode* dest_phi = Builder.CreatePHI(type,BBsuccessors[BB].size(),phi_name);
+  SWFTAdded++;
   BBDestPhis[BB] = dest_phi;
 
   // insert xor and store in this bb's dest 
   Value* comp_dest = Builder.CreateXor(diff_phi,dest_phi);
+  SWFTAdded++;
   destMap[BB] = comp_dest;
   // do the compare
   Value* cmp = Builder.CreateICmpEQ(comp_dest,Builder.getInt32(BB_TO_ID(BB)));
+  SWFTAdded++;
   // do the zext
   Value* zext = Builder.CreateZExt(cmp,type);
+  SWFTAdded++;
   // call assert
   std::vector<Value*> args;
   args.push_back(zext); // boolean
   args.push_back(Builder.getInt32(BB_TO_ID(BB))); // unique id
   Function *F = M->getFunction("assert_ft");
   Builder.CreateCall(F->getFunctionType(),F, args);
-
+  SWFTAdded++;
 
   // add xor before final br
   // InsertXorInEntry(BB);
