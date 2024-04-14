@@ -46,7 +46,9 @@ using namespace llvm;
 unordered_map<BasicBlock*,std::vector<BasicBlock*>> BBsuccessors = unordered_map<BasicBlock*,std::vector<BasicBlock*>>();
 unordered_map<unsigned int,std::vector<unsigned int>> BBsuccessors_ID = unordered_map<unsigned int,std::vector<unsigned int>>();
 
-unordered_map<BasicBlock*,std::pair<PHINode*,PHINode*>> BBPhis = unordered_map<BasicBlock*,std::pair<PHINode*,PHINode*>>();
+unordered_map<BasicBlock*,PHINode*> BBDiffPhis = unordered_map<BasicBlock*,PHINode*>();
+unordered_map<BasicBlock*,PHINode*> BBDestPhis = unordered_map<BasicBlock*,PHINode*>();
+
 unordered_map<BasicBlock*,Value*> destMap = unordered_map<BasicBlock*,Value*>();
 unordered_map<BasicBlock*,Value*> diffMap = unordered_map<BasicBlock*,Value*>();
 
@@ -305,25 +307,35 @@ static void InsertXorInEntry(BasicBlock* BB){
 }
 static void InsertControlFlowVerification(Module* M, BasicBlock* BB){
   if(!BB) return;
+  
+  auto inst = BB->begin();
+  for(;inst!=BB->end();++inst){
+    if(!dyn_cast<PHINode>(&(*inst)))break;
+  }
+
+
   IRBuilder<> Builder(BB);
   BranchInst* branch = nullptr;
-  auto inst = BB->begin();
   Builder.SetInsertPoint(&(*(inst)));
 
   Value* v = Builder.getInt32(0);
   auto * type = v->getType();
   // delete v;
 
-  // insert phi to get previous diff
+  // insert phi to get previous diff (ie use the diffMap to fill in phi)
   std::string phi_name = std::to_string(BB_TO_ID(BB))+"_diff_phi";
   PHINode* diff_phi = Builder.CreatePHI(type,BBsuccessors[BB].size(),phi_name);
+  BBDiffPhis[BB] = diff_phi;
   // diff_phi->addIncoming();
 
-  // insert phi to get previous dest
+  // insert phi to get previous dest (ie use the destMap to fill in phi)
   phi_name = std::to_string(BB_TO_ID(BB))+"_dest_phi";
   PHINode* dest_phi = Builder.CreatePHI(type,BBsuccessors[BB].size(),phi_name);
-  // insert xor and store in this bb's dest
-  Value* comp_dest=  Builder.CreateXor(diff_phi,dest_phi);
+  BBDestPhis[BB] = dest_phi;
+
+  // insert xor and store in this bb's dest 
+  Value* comp_dest = Builder.CreateXor(diff_phi,dest_phi);
+  destMap[BB] = comp_dest;
   // do the compare
   Value* cmp = Builder.CreateICmpEQ(comp_dest,Builder.getInt32(BB_TO_ID(BB)));
   // do the zext
@@ -375,37 +387,56 @@ static void SoftwareFaultTolerance(Module *M)
   }
 
   // fill in all successors
-  // for (std::vector<Function *>::iterator it = flist.begin(); it != flist.end(); it++){
-  //   for (auto BB = (*it)->begin(); BB != (*it)->end(); BB++){
-  //     // BBsuccessors[&(*BB)] = std::vector<BasicBlock*>();
-  //     for(auto inst = findNextBranch(BB->begin(),BB->end()) ;inst!=BB->end();inst = findNextBranch(++inst,BB->end())){
-  //       auto* branch = dyn_cast<BranchInst>(&(*inst));
-  //       for(uint i = 0;i<branch->getNumSuccessors();++i){
-  //         BBsuccessors[(branch->getSuccessor(i))].push_back((&(*BB)));
-  //         BBsuccessors_ID[BB_TO_ID(branch->getSuccessor(i))].push_back(BB_TO_ID(&(*BB)));
-  //         // printf("%d %d\n",BB_TO_ID(branch->getSuccessor(i)),BBsuccessors[(branch->getSuccessor(i))].size());
-  //       }
-  //     }
-  //   }
-  // }
+  for (std::vector<Function *>::iterator it = flist.begin(); it != flist.end(); it++){
+    for (auto BB = (*it)->begin(); BB != (*it)->end(); BB++){
+      // BBsuccessors[&(*BB)] = std::vector<BasicBlock*>();
+      for(auto inst = findNextBranch(BB->begin(),BB->end()) ;inst!=BB->end();inst = findNextBranch(++inst,BB->end())){
+        auto* branch = dyn_cast<BranchInst>(&(*inst));
+        for(uint i = 0;i<branch->getNumSuccessors();++i){
+          BBsuccessors[(branch->getSuccessor(i))].push_back((&(*BB)));
+          BBsuccessors_ID[BB_TO_ID(branch->getSuccessor(i))].push_back(BB_TO_ID(&(*BB)));
+        }
+      }
+    }
+  }
 
-  // // perform control flow validation
-  // for (std::vector<Function *>::iterator it = flist.begin(); it != flist.end(); it++)
-  // {
+  // perform control flow validation
+  for (std::vector<Function *>::iterator it = flist.begin(); it != flist.end(); it++)
+  {
 
-  //   for (auto BB = (*it)->begin(); BB != (*it)->end(); BB++)
-  //   {
-  //       auto next = BB;
-  //       next++;
+    for (auto BB = (*it)->begin(); BB != (*it)->end(); BB++)
+    {
+        auto next = BB;
+        next++;
         
-  //       if(BB == (*it)->begin()){
-  //         InsertXorInEntry(&(*BB));
-  //       }else if (next == (*it)->end()){
-  //         InsertConclusionInEnd(&(*BB));
-  //       }else {
-  //         InsertControlFlowVerification(M,&(*BB));
-  //       }
-  //   }
-  //   // break;
-  // }
+        if(BB == (*it)->begin()){
+          InsertXorInEntry(&(*BB));
+          IRBuilder<> Builder(&(*BB));
+          destMap[&(*BB)] = Builder.getInt32(BB_TO_ID(&(*BB)));
+        }
+        // else if (next == (*it)->end()){
+        //   InsertConclusionInEnd(&(*BB));
+        // }
+        else {
+          InsertControlFlowVerification(M,&(*BB));
+        }
+    }
+    // break;
+  }
+
+  // Clean up Phis
+  for (std::vector<Function *>::iterator it = flist.begin(); it != flist.end(); it++)
+  {
+
+    for (auto BB = (*it)->begin(); BB != (*it)->end(); BB++)
+    {
+      // iterate over all of BB's successors
+      // insert into phi for them, with their destMap/diffMap counterpart
+      for(auto i = BBsuccessors[&(*BB)].begin();i!=BBsuccessors[&(*BB)].end();++i){
+        assert(destMap[*i]);
+        if(BBDiffPhis[&(*BB)]) BBDiffPhis[&(*BB)]->addIncoming(diffMap[*i],*i);
+        if(BBDestPhis[&(*BB)]) BBDestPhis[&(*BB)]->addIncoming(destMap[*i],*i);
+      }
+    }
+  }
 }
