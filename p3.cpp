@@ -187,18 +187,22 @@ static llvm::Statistic SWFTAdded = {"", "SWFTadd", "SWFT added instructions"};
 
 static bool toReplicate(const Instruction &i)
 {
+
+  if(dyn_cast<BranchInst>(&i))return false;
+
   switch (i.getOpcode())
   {
     case Instruction::Alloca:
     case Instruction::Call:
     case Instruction::Store:
-    case Instruction::ICmp:
-    case Instruction::FCmp:
+    case Instruction::Ret:
       // branch
       return false;
     case Instruction::Add:
     case Instruction::FNeg:
     case Instruction::FAdd:
+    case Instruction::ICmp:
+    case Instruction::FCmp:
     case Instruction::Sub:
     case Instruction::FSub:
     case Instruction::Mul:
@@ -304,7 +308,7 @@ static void InsertXorInEntry(BasicBlock* BB){
   Value* bb4 = Builder.getInt32(BB_TO_ID(bb2));
 
   if(switchInst) {
-    switchInst->print(errs());
+    // switchInst->print(errs());
     printf("\nswitch has %d\n",switchInst->getNumSuccessors());
   }
 
