@@ -280,10 +280,6 @@ static void replicateCode(Module* M,Function *F)
         Function *F = M->getFunction("assert_ft");
         Builder.CreateCall(F->getFunctionType(),F, args);
 
-        args.push_back(Builder.getInt32(0)); // unique id
-        // Function* F1 = M->getFunction("assert_cfg_ft");
-        // Builder.CreateCall(F1->getFunctionType(),F1, args);
-        // SWFTAdded++;
       }
     }
     for (auto c = cloneMap.begin(); c != cloneMap.end(); c++)
@@ -334,7 +330,7 @@ static void InsertXorInEntry(BasicBlock* BB){
 
   if(switchInst) {
     // switchInst->print(errs());
-    printf("\nswitch has %d\n",switchInst->getNumSuccessors());
+    // printf("\nswitch has %d\n",switchInst->getNumSuccessors());
   }
 
   if(branch && branch->isConditional()){
@@ -484,7 +480,7 @@ static void SoftwareFaultTolerance(Module *M)
           // InsertXorInEntry(&(*BB));
           InsertControlFlowVerification(M,&(*BB));//InsertConclusionInEnd(&(*BB));
           InsertXorInEntry(&(*BB));
-        } 
+        }
         else {
           // InsertXorInEntry(&(*BB));
           InsertControlFlowVerification(M,&(*BB));
