@@ -270,23 +270,20 @@ static void replicateCode(Module* M,Function *F)
         Builder.SetInsertPoint(&(*(++insertPoint)));
         
         Value* cmp = Builder.CreateICmpEQ(c,&(*inst));
-        SWFTAdded++;
         // do the zext
         auto * type = Builder.getInt32(0)->getType();
         Value* zext = Builder.CreateZExt(cmp,type);
-        SWFTAdded++;
         // call assert
         std::vector<Value*> args;
         args.push_back(zext); // boolean
         args.push_back(Builder.getInt32(BB_TO_ID(&(*BB)))); // unique id
         Function *F = M->getFunction("assert_ft");
         Builder.CreateCall(F->getFunctionType(),F, args);
-        SWFTAdded++;
 
         args.push_back(Builder.getInt32(0)); // unique id
-        F = M->getFunction("assert_cfg_ft");
-        Builder.CreateCall(F->getFunctionType(),F, args);
-        SWFTAdded++;
+        // Function* F1 = M->getFunction("assert_cfg_ft");
+        // Builder.CreateCall(F1->getFunctionType(),F1, args);
+        // SWFTAdded++;
       }
     }
     for (auto c = cloneMap.begin(); c != cloneMap.end(); c++)
