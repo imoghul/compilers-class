@@ -484,7 +484,7 @@ static void SoftwareFaultTolerance(Module *M)
           // InsertXorInEntry(&(*BB));
           InsertControlFlowVerification(M,&(*BB));//InsertConclusionInEnd(&(*BB));
           InsertXorInEntry(&(*BB));
-        }
+        } 
         else {
           // InsertXorInEntry(&(*BB));
           InsertControlFlowVerification(M,&(*BB));
