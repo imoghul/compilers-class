@@ -246,19 +246,39 @@ static bool toReplicate(const Instruction &i)
 
 static void replicateCode(Function *F)
 {
+
   for (auto BB = F->begin(); BB != F->end(); BB++)
   {
     unordered_map<Instruction*,Instruction*> cloneMap = unordered_map<Instruction*,Instruction*>();
     
     for (auto inst = BB->begin(); inst != BB->end(); inst++)
     {
-
+      IRBuilder<> Builder(&(*BB));
       if (toReplicate(*inst))
       {
         auto c = inst->clone();
         c->insertBefore(&(*inst));
         SWFTAdded++;
         cloneMap[&(*inst)] = c;
+        // create icmp
+        // create assert call
+        auto * type = c->getType();
+        Value* cmp = Builder.CreateICmpEQ(c,&(*inst));
+        SWFTAdded++;
+        // do the zext
+        Value* zext = Builder.CreateZExt(cmp,type);
+        SWFTAdded++;
+        // call assert
+        std::vector<Value*> args;
+        args.push_back(zext); // boolean
+        args.push_back(Builder.getInt32(BB_TO_ID(&(*BB)))); // unique id
+        Function *F = M->getFunction("assert_ft");
+        Builder.CreateCall(F->getFunctionType(),F, args);
+
+        args.push_back(Builder.getInt32(0)); // unique id
+        F = M->getFunction("assert_cfg_ft");
+        Builder.CreateCall(F->getFunctionType(),F, args);
+        SWFTAdded++;
       }
     }
     for (auto c = cloneMap.begin(); c != cloneMap.end(); c++)
@@ -374,7 +394,7 @@ static void InsertControlFlowVerification(Module* M, BasicBlock* BB){
   args.push_back(Builder.getInt32(BB_TO_ID(BB))); // unique id
   Function *F = M->getFunction("assert_ft");
   Builder.CreateCall(F->getFunctionType(),F, args);
-  
+
   args.push_back(Builder.getInt32(0)); // unique id
   F = M->getFunction("assert_cfg_ft");
   Builder.CreateCall(F->getFunctionType(),F, args);
