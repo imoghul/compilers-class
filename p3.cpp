@@ -244,7 +244,7 @@ static bool toReplicate(const Instruction &i)
   return false;
 }
 
-static void replicateCode(Function *F)
+static void replicateCode(Module* M,Function *F)
 {
 
   for (auto BB = F->begin(); BB != F->end(); BB++)
@@ -260,6 +260,9 @@ static void replicateCode(Function *F)
         c->insertBefore(&(*inst));
         SWFTAdded++;
         cloneMap[&(*inst)] = c;
+
+
+
         // create icmp
         // create assert call
         auto * type = c->getType();
@@ -435,7 +438,7 @@ static void SoftwareFaultTolerance(Module *M)
   for (std::vector<Function *>::iterator it = flist.begin(); it != flist.end(); it++)
   {
     // CALL A FUNCTION TO REPLICATE CODE in *it
-    replicateCode(*it);
+    replicateCode(M,*it);
   }
   
   // fill in all successors
