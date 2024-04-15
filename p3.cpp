@@ -221,22 +221,22 @@ static bool toReplicate(const Instruction &i)
     case Instruction::Or:
     case Instruction::Xor:
     case Instruction::GetElementPtr:
-    case Instruction::Trunc:
-    case Instruction::ZExt:
-    case Instruction::SExt:
-    case Instruction::FPToUI:
-    case Instruction::FPToSI:
-    case Instruction::UIToFP:
-    case Instruction::SIToFP:
-    case Instruction::FPTrunc:
-    case Instruction::FPExt:
-    case Instruction::PtrToInt:
-    case Instruction::IntToPtr:
+    // case Instruction::Trunc:
+    // case Instruction::ZExt:
+    // case Instruction::SExt:
+    // case Instruction::FPToUI:
+    // case Instruction::FPToSI:
+    // case Instruction::UIToFP:
+    // case Instruction::SIToFP:
+    // case Instruction::FPTrunc:
+    // case Instruction::FPExt:
+    // case Instruction::PtrToInt:
+    // case Instruction::IntToPtr:
     case Instruction::BitCast:
-    case Instruction::AddrSpaceCast:
+    // case Instruction::AddrSpaceCast:
     case Instruction::ExtractElement:
     case Instruction::InsertElement:
-    case Instruction::ShuffleVector:
+    // case Instruction::ShuffleVector:
     case Instruction::ExtractValue:
     case Instruction::InsertValue:
       return true;
@@ -256,6 +256,7 @@ static void replicateCode(Module* M,Function *F)
       IRBuilder<> Builder(&(*BB));
       if (toReplicate(*inst))
       {
+        if(!inst->getType()->isIntegerTy()) continue;
         auto c = inst->clone();
         c->insertBefore(&(*inst));
         SWFTAdded++;
@@ -265,12 +266,13 @@ static void replicateCode(Module* M,Function *F)
 
         // create icmp
         // create assert call
-        auto * type = c->getType();
+        auto insertPoint = inst;
+        Builder.SetInsertPoint(&(*(++insertPoint)));
+        
         Value* cmp = Builder.CreateICmpEQ(c,&(*inst));
-        SWFTAdded++;
         // do the zext
+        auto * type = Builder.getInt32(0)->getType();
         Value* zext = Builder.CreateZExt(cmp,type);
-        SWFTAdded++;
         // call assert
         std::vector<Value*> args;
         args.push_back(zext); // boolean
@@ -278,10 +280,10 @@ static void replicateCode(Module* M,Function *F)
         Function *F = M->getFunction("assert_ft");
         Builder.CreateCall(F->getFunctionType(),F, args);
 
-        args.push_back(Builder.getInt32(0)); // unique id
-        F = M->getFunction("assert_cfg_ft");
-        Builder.CreateCall(F->getFunctionType(),F, args);
-        SWFTAdded++;
+        // args.push_back(Builder.getInt32(0)); // unique id
+        // F = M->getFunction("assert_cfg_ft");
+        // Builder.CreateCall(F->getFunctionType(),F, args);
+        // SWFTAdded++;
       }
     }
     for (auto c = cloneMap.begin(); c != cloneMap.end(); c++)
@@ -396,7 +398,7 @@ static void InsertControlFlowVerification(Module* M, BasicBlock* BB){
   args.push_back(zext); // boolean
   args.push_back(Builder.getInt32(BB_TO_ID(BB))); // unique id
   Function *F = M->getFunction("assert_ft");
-  Builder.CreateCall(F->getFunctionType(),F, args);
+  // Builder.CreateCall(F->getFunctionType(),F, args);
 
   args.push_back(Builder.getInt32(0)); // unique id
   F = M->getFunction("assert_cfg_ft");
